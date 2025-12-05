@@ -5,9 +5,11 @@ import { CircuitBackground } from './components/CircuitBackground';
 import { ActiveTool } from './components/ActiveTool';
 import { TOOLS_DATA } from './constants';
 import { SubTool, ToolCategory } from './types';
+import { AllTools } from './components/AllTools';
 
 function App() {
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
+  const [showAllTools, setShowAllTools] = useState(false);
 
   // Helper to find tool data based on ID
   const getActiveToolData = () => {
@@ -20,6 +22,11 @@ function App() {
   };
 
   const activeData = getActiveToolData();
+
+  const handleBack = () => {
+    setActiveToolId(null);
+    setShowAllTools(false);
+  }
 
   // Helper for specific 3D rotations based on column index (0-3)
   const getTransformStyles = (index: number) => {
@@ -61,7 +68,7 @@ function App() {
       <nav className="relative z-50 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
         <div 
             className="flex items-center gap-2 cursor-pointer" 
-            onClick={() => setActiveToolId(null)}
+            onClick={handleBack}
         >
           <div className="text-cyan-400">
             <Box size={32} strokeWidth={2} />
@@ -70,8 +77,8 @@ function App() {
         </div>
         
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-          <button onClick={() => setActiveToolId(null)} className="hover:text-white transition-colors">Home</button>
-          <button onClick={() => setActiveToolId(null)} className="hover:text-white transition-colors">Tools</button>
+          <button onClick={handleBack} className="hover:text-white transition-colors">Home</button>
+          <button onClick={() => setShowAllTools(true)} className="hover:text-white transition-colors">All Tools</button>
           <a href="#" className="hover:text-white transition-colors">Blog</a>
         </div>
 
@@ -86,8 +93,10 @@ function App() {
             toolId={activeToolId} 
             toolData={activeData.subTool} 
             category={activeData.category} 
-            onBack={() => setActiveToolId(null)}
+            onBack={handleBack}
           />
+      ) : showAllTools ? (
+        <AllTools />
       ) : (
           <>
             {/* Hero Section */}
@@ -137,11 +146,7 @@ function App() {
 
                 <div className="mt-24 text-center">
                 <button 
-                    onClick={() => {
-                        const allTools = TOOLS_DATA.flatMap(t => t.subTools);
-                        const random = allTools[Math.floor(Math.random() * allTools.length)];
-                        setActiveToolId(random.id);
-                    }}
+                    onClick={() => setShowAllTools(true)}
                     className="relative group px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-sm tracking-wide transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]"
                 >
                     EXPLORE ALL TOOLS

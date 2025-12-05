@@ -14,7 +14,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
       className={`
         relative group cursor-pointer transition-all duration-500 ease-out
         hover:-translate-y-2 hover:shadow-2xl
-        w-full max-w-[300px] h-[480px] mx-auto
+        w-full max-w-[300px] h-auto mx-auto
         perspective-1000
       `}
     >
@@ -47,7 +47,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
         </div>
 
         {/* Sub Tools Grid */}
-        <div className="w-full px-6 pb-8 mt-auto z-10">
+        <div className="w-full px-6 pb-8 mt-auto z-10 max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <div className="grid grid-cols-3 gap-3">
             {/* The main icon acts as the 'default' tool or main category entry */}
             <div className="flex flex-col items-center justify-center">
