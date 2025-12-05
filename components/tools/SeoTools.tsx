@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Code, FileText, Type, BarChart3, RefreshCw, Sparkles, BrainCircuit, Copy } from 'lucide-react';
+import { Search, Code, FileText, Type, BarChart3, RefreshCw, Sparkles, BrainCircuit, Copy, LayoutGrid, FileX, ImagePlus } from 'lucide-react';
 import { SubTool } from '../../types';
+import { SitemapGenerator } from '../seo/SitemapGenerator';
+import { RobotsTxtGenerator } from '../seo/RobotsTxtGenerator';
+import { SchemaMarkupGenerator } from '../seo/SchemaMarkupGenerator';
+import { ImageAltTextGenerator } from '../seo/ImageAltTextGenerator';
 
 interface SeoToolsProps {
   toolId: string;
@@ -14,6 +18,18 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ toolId, toolData, notify }) 
     const [reasoning, setReasoning] = useState<any>(null);
     const [showReasoning, setShowReasoning] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Switch between new standalone tools and existing AI tools
+    switch (toolId) {
+        case 'seo-sitemap':
+            return <SitemapGenerator />;
+        case 'seo-robots':
+            return <RobotsTxtGenerator />;
+        case 'seo-schema':
+            return <SchemaMarkupGenerator />;
+        case 'seo-alt-text':
+            return <ImageAltTextGenerator />;
+    }
 
     const fetchSeoInsights = async (prompt: string) => {
         const apiKey = process.env.OPENROUTER_API_KEY;
@@ -59,6 +75,7 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ toolId, toolData, notify }) 
         fetchSeoInsights(prompt);
     };
 
+    // Default view for the AI-based SEO tools
     return (
         <div className="flex flex-col items-center max-w-4xl mx-auto w-full">
             <div className="w-full bg-gray-900 p-6 md:p-8 rounded-xl border border-gray-800 shadow-xl min-h-[400px]">

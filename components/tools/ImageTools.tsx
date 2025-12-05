@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Image as ImageIcon, ArrowLeft, SlidersHorizontal, Lock, Unlock } from 'lucide-react';
+import { Image as ImageIcon, ArrowLeft, SlidersHorizontal, Lock, Unlock, Crop, Pipette } from 'lucide-react';
+import ReactCrop, { Crop as CropType } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 interface ImageToolsProps {
   toolId: string;
@@ -10,7 +12,10 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ toolId }) => {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [filter, setFilter] = useState('none');
     const [resizeDims, setResizeDims] = useState({ w: 0, h: 0, lock: true });
-    
+    const [crop, setCrop] = useState<CropType>();
+    const [isCropping, setIsCropping] = useState(false);
+    const [colorPicker, setColorPicker] = useState({ active: false, color: '#ffffff' });
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const reader = new FileReader();
@@ -20,7 +25,10 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ toolId }) => {
                     setImagePreview(src);
                     const img = new Image();
                     img.src = src;
-                    img.onload = () => { setResizeDims({ w: img.width, h: img.height, lock: true }); };
+                    img.onload = () => { 
+                        setResizeDims({ w: img.width, h: img.height, lock: true });
+                        setCrop({ unit: 'px', width: 50, height: 50, x: 10, y: 10 });
+                    };
                 }
             };
             reader.readAsDataURL(e.target.files[0]);
@@ -29,8 +37,10 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ toolId }) => {
 
     const updateResizeDim = (type: 'w' | 'h', value: number) => {
         if (value < 1) return;
+        const img = new Image();
+        img.src = imagePreview!;
+        const ratio = img.width / img.height;
         if (resizeDims.lock) {
-            const ratio = resizeDims.w / resizeDims.h;
             if (type === 'w') {
                 setResizeDims({ ...resizeDims, w: value, h: Math.round(value / ratio) });
             } else {
@@ -48,32 +58,56 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ toolId }) => {
         const img = new Image();
         img.src = imagePreview;
         img.onload = () => {
-            if (toolId === 'img-resize') {
-                 canvas.width = resizeDims.w || img.width;
-                 canvas.height = resizeDims.h || img.height;
-                 if (ctx) {
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                 }
-            } else {
-                 canvas.width = img.width;
-                 canvas.height = img.height;
-                 if (ctx) {
-                    if (toolId === 'img-filter') ctx.filter = filter;
-                    ctx.drawImage(img, 0, 0);
-                 }
+            canvas.width = img.width;
+            canvas.height = img.height;
+            if (ctx) {
+                if (toolId === 'img-filter') ctx.filter = filter;
+                ctx.drawImage(img, 0, 0);
             }
         };
-    }, [imagePreview, filter, toolId, resizeDims.w, resizeDims.h]);
+    }, [imagePreview, filter, toolId]);
 
     const handleDownload = () => {
-        if (canvasRef.current) {
-            const link = document.createElement('a');
-            const ext = toolId === 'img-convert' ? 'png' : 'jpg';
-            link.download = `edited-image-${Date.now()}.${ext}`;
-            link.href = canvasRef.current.toDataURL(`image/${ext}`, 0.9);
-            link.click();
+        if (!canvasRef.current || !imagePreview) return;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.src = imagePreview;
+        img.onload = () => {
+            if (ctx) {
+                if (toolId === 'img-resize') {
+                    canvas.width = resizeDims.w;
+                    canvas.height = resizeDims.h;
+                    ctx.drawImage(img, 0, 0, resizeDims.w, resizeDims.h);
+                } else if (toolId === 'img-crop' && crop) {
+                    canvas.width = crop.width;
+                    canvas.height = crop.height;
+                    ctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+                } else {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    if (toolId === 'img-filter') ctx.filter = filter;
+                    ctx.drawImage(img, 0, 0);
+                }
+                const link = document.createElement('a');
+                link.download = `edited-image-${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        };
+    };
+
+    const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        if (colorPicker.active && canvasRef.current) {
+            const ctx = canvasRef.current.getContext('2d');
+            const rect = canvasRef.current.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            if (ctx) {
+                const pixel = ctx.getImageData(x, y, 1, 1).data;
+                const color = `#${(pixel[0] << 16 | pixel[1] << 8 | pixel[2]).toString(16).padStart(6, '0')}`;
+                setColorPicker({ active: false, color });
+            }
         }
     };
 
@@ -87,7 +121,7 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ toolId }) => {
                 </label>
             ) : (
                 <div className="flex flex-col md:flex-row gap-6 h-full">
-                    <div className="w-full md:w-64 flex flex-col gap-6 p-4 bg-gray-900 border border-gray-800 rounded-xl">
+                    <div className="w-full md:w-72 flex flex-col gap-6 p-4 bg-gray-900 border border-gray-800 rounded-xl">
                         <button onClick={() => {setImagePreview(null); setFilter('none');}} className="text-sm text-gray-400 hover:text-white flex items-center gap-2 mb-4">
                             <ArrowLeft size={14} /> Choose Different Image
                         </button>
@@ -122,12 +156,36 @@ export const ImageTools: React.FC<ImageToolsProps> = ({ toolId }) => {
                              </div>
                         )}
 
+                        {toolId === 'img-crop' && (
+                             <div className="space-y-4">
+                                <h4 className="text-white font-medium flex items-center gap-2"><Crop size={16}/> Cropping</h4>
+                                <p className="text-xs text-gray-400">Click and drag on the image to select an area to crop.</p>
+                             </div>
+                        )}
+
+                        {toolId === 'img-color-picker' && (
+                             <div className="space-y-4">
+                                <h4 className="text-white font-medium flex items-center gap-2"><Pipette size={16}/> Color Picker</h4>
+                                <button onClick={() => setColorPicker({ ...colorPicker, active: true })} className="w-full py-2 bg-gray-800 hover:bg-gray-700 rounded">Pick Color</button>
+                                <div className="flex items-center gap-4 p-2 bg-black/30 rounded-lg">
+                                    <div style={{ backgroundColor: colorPicker.color }} className="w-10 h-10 rounded border-2 border-gray-600"></div>
+                                    <span className="font-mono text-cyan-400">{colorPicker.color}</span>
+                                </div>
+                             </div>
+                        )}
+
                         <button onClick={handleDownload} className="mt-auto w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-bold">Download Image</button>
                     </div>
 
                     <div className="flex-1 bg-[#050508] border border-gray-800 rounded-xl flex items-center justify-center overflow-hidden relative p-4">
                          <div className="relative max-w-full max-h-full shadow-2xl overflow-auto border border-gray-800">
-                             <canvas ref={canvasRef} className="block" style={{ maxWidth: '100%', height: 'auto' }} />
+                            {toolId === 'img-crop' ? (
+                                <ReactCrop crop={crop} onChange={c => setCrop(c)}>
+                                    <img src={imagePreview!} alt="Preview" />
+                                </ReactCrop>
+                            ) : (
+                                <canvas ref={canvasRef} onClick={handleCanvasClick} className={`block ${colorPicker.active ? 'cursor-crosshair' : ''}`} style={{ maxWidth: '100%', height: 'auto' }} />
+                            )}
                          </div>
                     </div>
                 </div>
