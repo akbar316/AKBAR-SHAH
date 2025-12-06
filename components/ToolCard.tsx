@@ -1,13 +1,20 @@
 import React from 'react';
 import { ToolCategory } from '../types';
+import { TOOLS_DATA } from '../constants';
 
 interface ToolCardProps {
   tool: ToolCategory;
   onSelectTool: (toolId: string) => void;
 }
 
+// Determine the maximum number of sub-tools any category has.
+const MAX_SUB_TOOLS = Math.max(...TOOLS_DATA.map(cat => cat.subTools.length));
+
 export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
   const MainIcon = tool.mainIcon;
+
+  // Create a placeholder array to fill the grid.
+  const placeholders = Array.from({ length: MAX_SUB_TOOLS - tool.subTools.length });
 
   return (
     <div 
@@ -18,7 +25,6 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
         perspective-1000
       `}
     >
-      {/* Card Container - Imitating the skewed 3D look with gradient and borders */}
       <div 
         className={`
           relative w-full h-full flex flex-col items-center
@@ -37,7 +43,6 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
         <div className="pt-10 pb-6 text-center w-full z-10">
           <h3 className="text-xl font-medium text-white mb-6 tracking-wide drop-shadow-md">{tool.title}</h3>
           
-          {/* Main Large Icon */}
           <div className="flex flex-col items-center justify-center mb-8">
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)] mb-3 group-hover:scale-110 transition-transform duration-300">
                <MainIcon size={48} className="text-white opacity-90" strokeWidth={1.5} />
@@ -47,16 +52,8 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
         </div>
 
         {/* Sub Tools Grid */}
-        <div className="w-full px-6 pb-8 mt-auto z-10 max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <div className="w-full px-6 pb-8 mt-auto z-10">
           <div className="grid grid-cols-3 gap-3">
-            {/* The main icon acts as the 'default' tool or main category entry */}
-            <div className="flex flex-col items-center justify-center">
-                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-1 group-hover:bg-white/10 transition-colors">
-                  <span className="text-2xl font-bold text-gray-400 opacity-50">{tool.title.charAt(0)}</span>
-                </div>
-                <span className="text-[10px] text-gray-500 text-center leading-tight">{tool.title.split(' ')[0]}</span>
-            </div>
-            
             {tool.subTools.map((sub) => (
               <div 
                 key={sub.id} 
@@ -73,6 +70,11 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
                   {sub.name}
                 </span>
               </div>
+            ))}
+            
+            {/* Placeholder items to fill the grid */}
+            {placeholders.map((_, index) => (
+              <div key={`placeholder-${index}`} className="w-12 h-12 rounded-xl" />
             ))}
           </div>
         </div>

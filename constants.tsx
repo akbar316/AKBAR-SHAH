@@ -38,7 +38,11 @@ import {
   LayoutGrid,
   FileX,
   Code,
-  ImagePlus
+  ImagePlus,
+  FileWord,
+  FileImage,
+  Merge,
+  Compress
 } from 'lucide-react';
 import { ToolCategory } from './types';
 
@@ -53,6 +57,12 @@ export const TOOLS_DATA: ToolCategory[] = [
     borderColor: 'border-blue-500/30',
     shadowColor: 'shadow-blue-500/20',
     subTools: [
+      { id: 'pdf-to-word', name: 'PDF to Word', icon: FileWord },
+      { id: 'pdf-editor', name: 'PDF Editor', icon: PenTool },
+      { id: 'pdf-to-image', name: 'PDF to Image', icon: FileImage },
+      { id: 'image-to-pdf', name: 'Image to PDF', icon: ImageIcon },
+      { id: 'pdf-merge', name: 'Merge PDF', icon: Merge },
+      { id: 'pdf-compress', name: 'Compress PDF', icon: Compress },
       { id: 'pdf-split', name: 'Split', icon: Scissors },
       { id: 'pdf-sign', name: 'Sign', icon: PenTool },
     ]

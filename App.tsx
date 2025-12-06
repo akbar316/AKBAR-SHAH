@@ -5,11 +5,9 @@ import { CircuitBackground } from './components/CircuitBackground';
 import { ActiveTool } from './components/ActiveTool';
 import { TOOLS_DATA } from './constants';
 import { SubTool, ToolCategory } from './types';
-import { AllTools } from './components/AllTools';
 
 function App() {
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
-  const [showAllTools, setShowAllTools] = useState(false);
 
   // Helper to find tool data based on ID
   const getActiveToolData = () => {
@@ -25,7 +23,6 @@ function App() {
 
   const handleBack = () => {
     setActiveToolId(null);
-    setShowAllTools(false);
   }
 
   // Helper for specific 3D rotations based on column index (0-3)
@@ -78,7 +75,6 @@ function App() {
         
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <button onClick={handleBack} className="hover:text-white transition-colors">Home</button>
-          <button onClick={() => setShowAllTools(true)} className="hover:text-white transition-colors">All Tools</button>
           <a href="#" className="hover:text-white transition-colors">Blog</a>
         </div>
 
@@ -95,8 +91,6 @@ function App() {
             category={activeData.category} 
             onBack={handleBack}
           />
-      ) : showAllTools ? (
-        <AllTools />
       ) : (
           <>
             {/* Hero Section */}
@@ -142,16 +136,6 @@ function App() {
 
                     {/* Reflection/Ground Effect for Desktop */}
                     <div className="hidden lg:block absolute -bottom-20 left-0 right-0 h-40 bg-gradient-to-b from-blue-500/5 to-transparent blur-xl pointer-events-none opacity-50 transform rotateX(90deg)" />
-                </div>
-
-                <div className="mt-24 text-center">
-                <button 
-                    onClick={() => setShowAllTools(true)}
-                    className="relative group px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-sm tracking-wide transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]"
-                >
-                    EXPLORE ALL TOOLS
-                    <div className="absolute inset-0 bg-white/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
                 </div>
             </main>
 
@@ -199,7 +183,7 @@ function App() {
           <div className="flex flex-col md:flex-row justify-between items-center mb-12">
             <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 md:mb-0">
               <a href="#" className="hover:text-cyan-400 transition-colors">About Us</a>
-              <a href="#" className="hover:text-cyan-400 transition-colors">Blog</a>
+              <a href="#" className="hovertext-cyan-400 transition-colors">Blog</a>
               <a href="#" className="hover:text-cyan-400 transition-colors">Contact</a>
               <a href="#" className="hover:text-cyan-400 transition-colors">Terms of Service</a>
             </div>
