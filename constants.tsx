@@ -42,7 +42,7 @@ import {
   FileWord,
   FileImage,
   Merge,
-  Compress
+  Shrink
 } from 'lucide-react';
 import { ToolCategory } from './types';
 
@@ -62,7 +62,7 @@ export const TOOLS_DATA: ToolCategory[] = [
       { id: 'pdf-to-image', name: 'PDF to Image', icon: FileImage },
       { id: 'image-to-pdf', name: 'Image to PDF', icon: ImageIcon },
       { id: 'pdf-merge', name: 'Merge PDF', icon: Merge },
-      { id: 'pdf-compress', name: 'Compress PDF', icon: Compress },
+      { id: 'pdf-compress', name: 'Compress PDF', icon: Shrink },
       { id: 'pdf-split', name: 'Split', icon: Scissors },
       { id: 'pdf-sign', name: 'Sign', icon: PenTool },
     ]

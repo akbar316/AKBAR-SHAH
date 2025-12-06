@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Download, RefreshCw, PenTool, Trash2, FileWord, FileImage, Merge, Compress, Image as ImageIcon } from 'lucide-react';
+import { Upload, Download, RefreshCw, PenTool, Trash2, FileWord, FileImage, Merge, Shrink, Image as ImageIcon } from 'lucide-react';
 import { SubTool } from '../../types';
 import { PDFDocument, rgb, degrees } from 'pdf-lib';
 
