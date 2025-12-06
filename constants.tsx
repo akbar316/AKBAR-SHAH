@@ -39,7 +39,6 @@ import {
   FileX,
   Code,
   ImagePlus,
-  FileWord,
   FileImage,
   Merge,
   Shrink
@@ -57,7 +56,7 @@ export const TOOLS_DATA: ToolCategory[] = [
     borderColor: 'border-blue-500/30',
     shadowColor: 'shadow-blue-500/20',
     subTools: [
-      { id: 'pdf-to-word', name: 'PDF to Word', icon: FileWord },
+      { id: 'pdf-to-word', name: 'PDF to Word', icon: FileText },
       { id: 'pdf-editor', name: 'PDF Editor', icon: PenTool },
       { id: 'pdf-to-image', name: 'PDF to Image', icon: FileImage },
       { id: 'image-to-pdf', name: 'Image to PDF', icon: ImageIcon },

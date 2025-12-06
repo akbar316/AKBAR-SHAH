@@ -7,7 +7,7 @@ import { DevTools } from './tools/DevTools';
 import { ImageTools } from './tools/ImageTools';
 import { StudentTools } from './tools/StudentTools';
 import { UtilityTools } from './tools/UtilityTools';
-import { AITools } from './tools/AITools';
+import { AiTools } from './tools/AiTools';
 import { SeoTools } from './tools/SeoTools';
 
 interface ActiveToolProps {
@@ -40,7 +40,7 @@ export const ActiveTool: React.FC<ActiveToolProps> = ({ toolId, toolData, catego
         case 'utility':
             return <UtilityTools toolId={toolId} />;
         case 'ai':
-            return <AITools toolId={toolId} notify={showNotification} />;
+            return <AiTools toolId={toolId} notify={showNotification} />;
         case 'seo':
             return <SeoTools toolId={toolId} toolData={toolData} notify={showNotification} />;
         default:
