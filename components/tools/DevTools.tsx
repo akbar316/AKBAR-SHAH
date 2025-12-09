@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { RefreshCw, Play, Copy, LayoutTemplate, Code, Eye, ExternalLink } from 'lucide-react';
+import { RefreshCw, Play, Copy, LayoutTemplate, Code, Eye, ExternalLink, Download, Wand2, Calculator, FormInput, Layout } from 'lucide-react';
 
 interface DevToolsProps {
   toolId: string;
@@ -52,7 +52,7 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
             } else if (toolId === 'dev-web-builder') {
                 if (!inputText.trim()) { notify("Please describe your website."); return; }
                 const apiKey = getApiKey();
-                if (!apiKey) { notify("API Key Missing"); setOutputText("Error: VITE_OPENROUTER_API_KEY missing."); return; }
+                if (!apiKey) { notify("API Key Missing"); setOutputText("Error: VITE_OPENROUTER_API_KEY missing. Please add it to Vercel env vars."); return; }
                 
                 setLoading(true);
                 try {
@@ -62,8 +62,20 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                         body: JSON.stringify({
                             "model": "amazon/nova-2-lite-v1:free",
                             "messages": [
-                                { "role": "system", "content": "You are an advanced AI Website Builder Assistant.\nCapabilities:\n- Build multi-page websites\n- Generate HTML, CSS, JS, Tailwind, or Bootstrap on request\n- Create animations, transitions, and modern UI components\n- Auto-generate SEO tags, schema, OpenGraph tags\n- Provide responsive design\n- Include sections like Navbar, Hero, Features, Pricing, Footer\n\nOutput ONLY the raw HTML code (including <style> or CDN links for Tailwind) in your response. No markdown ticks like ```html. Just the code." },
-                                { "role": "user", "content": `Create a website based on this description: ${inputText}` }
+                                { 
+                                    "role": "system", 
+                                    "content": `You are an expert Full-Stack AI Web Developer.
+Your goal is to generate high-quality, fully functional, single-file HTML applications.
+
+RULES:
+1. Use Tailwind CSS (via CDN) for modern, responsive styling.
+2. If the user asks for a TOOL (calculator, converter, game, app), you MUST write the necessary JavaScript logic inside <script> tags to make it fully functional and interactive immediately.
+3. If the user asks for a FORM, create a beautiful layout with validation scripts if needed.
+4. Ensure the design is modern, clean, and mobile-friendly.
+5. Output ONLY raw HTML code. Do NOT wrap in markdown code blocks (no \`\`\`html). Just the raw code starting with <!DOCTYPE html>.
+6. Include FontAwesome or Lucide icons via CDN if needed.` 
+                                },
+                                { "role": "user", "content": `Build this: ${inputText}` }
                             ]
                         })
                     });
@@ -85,23 +97,67 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
         }
     };
 
+    const downloadHtml = () => {
+        const blob = new Blob([outputText], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'generated-website.html';
+        a.click();
+        notify("HTML File Downloaded!");
+    };
+
+    const openInNewTab = () => {
+        const newWindow = window.open();
+        if (newWindow) {
+            newWindow.document.write(outputText);
+            newWindow.document.close();
+        }
+    };
+
+    const quickTemplates = [
+        { name: 'SaaS Landing', icon: Layout, prompt: 'A modern dark-themed SaaS landing page for an AI startup. Include a sticky navbar, a hero section with a gradient headline, a features grid with icons, a pricing table with 3 tiers, and a newsletter footer.' },
+        { name: 'Dashboard', icon: LayoutTemplate, prompt: 'A professional admin dashboard layout. Sidebar navigation on the left, top header with user profile. Main content area showing stats cards (Total Users, Revenue) and a placeholder data table.' },
+        { name: 'Calculator Tool', icon: Calculator, prompt: 'A fully functional BMI Calculator tool. Modern card design centered on screen. Inputs for Height (cm) and Weight (kg). A "Calculate" button that runs JavaScript to show the BMI result and category (Normal, Overweight, etc) dynamically without reloading.' },
+        { name: 'Login Form', icon: FormInput, prompt: 'A split-screen login page. Left side is a high-quality abstract image or gradient. Right side is a clean login form with Email, Password, "Remember Me" checkbox, and a Sign In button. Include hover effects.' }
+    ];
+
     return (
         <div className="flex flex-col h-full max-w-6xl mx-auto">
             {/* Header / Input Area */}
             <div className="flex flex-col gap-4 mb-6">
                 {toolId === 'dev-web-builder' && (
                     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-4">
-                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                            <LayoutTemplate className="text-emerald-400"/> AI Website Builder
-                        </h3>
-                        <p className="text-gray-400 text-sm mb-4">
-                            Describe the website you want to build (e.g., "A modern portfolio for a graphic designer with a dark theme, image gallery, and contact form").
-                        </p>
+                        <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                    <Wand2 className="text-emerald-400"/> AI Website & Tool Builder
+                                </h3>
+                                <p className="text-gray-400 text-sm">
+                                    Describe any website, tool, or form. The AI will generate the code and make it functional.
+                                </p>
+                            </div>
+                            
+                            {/* Quick Template Buttons */}
+                            <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                                {quickTemplates.map((t, i) => (
+                                    <button 
+                                        key={i}
+                                        onClick={() => setInputText(t.prompt)}
+                                        className="flex items-center gap-2 px-3 py-2 bg-gray-950 border border-gray-800 hover:border-emerald-500/50 rounded-lg text-xs font-medium text-gray-300 hover:text-white hover:bg-emerald-900/10 transition-all whitespace-nowrap"
+                                        title={t.prompt}
+                                    >
+                                        <t.icon size={14} className="text-emerald-500"/> {t.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="flex gap-4">
                             <textarea 
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
-                                placeholder="Describe your website..."
+                                placeholder="Describe your website or tool (e.g., 'A To-Do List app where I can add and delete tasks')..."
                                 className="flex-1 bg-black/30 border border-gray-700 rounded-xl p-4 text-white focus:border-emerald-500 outline-none resize-none h-32"
                             />
                         </div>
@@ -111,8 +167,8 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                                 disabled={loading}
                                 className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-lg font-bold text-white flex items-center gap-2 transition-all shadow-lg hover:shadow-emerald-900/20"
                             >
-                                {loading ? <RefreshCw className="animate-spin" size={20}/> : <LayoutTemplate size={20} />}
-                                {loading ? 'Building Website...' : 'Generate Website'}
+                                {loading ? <RefreshCw className="animate-spin" size={20}/> : <Wand2 size={20} />}
+                                {loading ? 'Generating Code...' : 'Generate Code'}
                             </button>
                         </div>
                     </div>
@@ -156,7 +212,7 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                 
                 {/* Web Builder Output Area (Full Width) */}
                 {toolId === 'dev-web-builder' ? (
-                    <div className="col-span-2 flex flex-col h-full bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+                    <div className="col-span-2 flex flex-col h-full bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
                         {/* Toolbar */}
                         <div className="bg-gray-950 p-2 border-b border-gray-800 flex justify-between items-center">
                             <div className="flex bg-black/40 rounded-lg p-1 border border-gray-800">
@@ -173,22 +229,42 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                                     <Eye size={16}/> Preview
                                 </button>
                             </div>
-                            <button 
-                                onClick={() => {navigator.clipboard.writeText(outputText); notify("Code Copied!");}} 
-                                disabled={!outputText}
-                                className="text-gray-400 hover:text-white flex items-center gap-2 text-sm px-3 py-1.5 rounded hover:bg-gray-800 transition-colors"
-                            >
-                                <Copy size={14}/> Copy Code
-                            </button>
+                            
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={downloadHtml}
+                                    disabled={!outputText}
+                                    className="text-gray-400 hover:text-emerald-400 flex items-center gap-2 text-sm px-3 py-1.5 rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                    title="Download HTML"
+                                >
+                                    <Download size={16}/>
+                                </button>
+                                <button 
+                                    onClick={openInNewTab}
+                                    disabled={!outputText}
+                                    className="text-gray-400 hover:text-blue-400 flex items-center gap-2 text-sm px-3 py-1.5 rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                    title="Open in New Tab"
+                                >
+                                    <ExternalLink size={16}/>
+                                </button>
+                                <div className="w-px h-6 bg-gray-800 mx-1"></div>
+                                <button 
+                                    onClick={() => {navigator.clipboard.writeText(outputText); notify("Code Copied!");}} 
+                                    disabled={!outputText}
+                                    className="text-gray-400 hover:text-white flex items-center gap-2 text-sm px-3 py-1.5 rounded hover:bg-gray-800 transition-colors"
+                                >
+                                    <Copy size={14}/> Copy
+                                </button>
+                            </div>
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 relative bg-[#0d1117]">
+                        <div className="flex-1 relative bg-[#0d1117] min-h-[500px]">
                              {viewMode === 'code' ? (
                                 <textarea 
                                     value={outputText}
                                     readOnly
-                                    className="w-full h-full bg-transparent p-4 font-mono text-sm text-emerald-400 outline-none resize-none"
+                                    className="w-full h-full bg-transparent p-4 font-mono text-sm text-emerald-400 outline-none resize-none custom-scrollbar leading-relaxed"
                                     placeholder="// Generated HTML code will appear here..."
                                 />
                              ) : (
@@ -198,11 +274,12 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                                             srcDoc={outputText}
                                             className="w-full h-full border-none"
                                             title="Website Preview"
-                                            sandbox="allow-scripts"
+                                            sandbox="allow-scripts allow-modals allow-forms allow-popups allow-same-origin"
                                         />
                                     ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                            Preview will appear here after generation...
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                                            <LayoutTemplate size={48} className="mb-4 opacity-20"/>
+                                            <p>Preview will appear here after generation...</p>
                                         </div>
                                     )}
                                 </div>
