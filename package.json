@@ -15,7 +15,8 @@
     "pdfjs-dist": "3.11.174",
     "jspdf": "2.5.1",
     "pdf-lib": "1.17.1",
-    "html2canvas": "1.4.1"
+    "html2canvas": "1.4.1",
+    "fabric": "latest"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

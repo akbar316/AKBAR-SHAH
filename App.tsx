@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, Shield, Zap, Cloud, Menu, Twitter, Github, Linkedin, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Box, Shield, Zap, Cloud, Menu, ChevronDown } from 'lucide-react';
 import { ToolCard } from './components/ToolCard';
 import { CircuitBackground } from './components/CircuitBackground';
 import { ActiveTool } from './components/ActiveTool';
@@ -8,6 +8,38 @@ import { SubTool, ToolCategory } from './types';
 
 function App() {
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
+
+  // SEO: Sync State with URL Query Parameters
+  useEffect(() => {
+    // Function to handle URL changes (Back button or initial load)
+    const handlePopState = () => {
+       const params = new URLSearchParams(window.location.search);
+       const toolParam = params.get('tool');
+       setActiveToolId(toolParam);
+    };
+    
+    // Listen for back/forward navigation
+    window.addEventListener('popstate', handlePopState);
+    
+    // Check URL on initial mount
+    handlePopState();
+    
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Update URL when tool is selected (Push State)
+  const handleToolSelect = (id: string | null) => {
+      setActiveToolId(id);
+      if (id) {
+          const newUrl = `${window.location.pathname}?tool=${id}`;
+          window.history.pushState({ tool: id }, '', newUrl);
+          // Scroll to top when opening a tool
+          window.scrollTo(0, 0);
+      } else {
+          const newUrl = window.location.pathname;
+          window.history.pushState({}, '', newUrl);
+      }
+  };
 
   // Helper to find tool data based on ID
   const getActiveToolData = () => {
@@ -54,14 +86,14 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white font-sans selection:bg-cyan-500/30 overflow-x-hidden relative flex flex-col">
+    <div className="min-h-screen bg-transparent text-white font-sans selection:bg-cyan-500/30 overflow-x-hidden relative flex flex-col">
       <CircuitBackground />
       
       {/* Navigation */}
       <nav className="relative z-50 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
         <div 
             className="flex items-center gap-2 cursor-pointer" 
-            onClick={() => setActiveToolId(null)}
+            onClick={() => handleToolSelect(null)}
         >
           <div className="text-cyan-400">
             <Box size={32} strokeWidth={2} />
@@ -70,8 +102,8 @@ function App() {
         </div>
         
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-          <button onClick={() => setActiveToolId(null)} className="hover:text-white transition-colors">Home</button>
-          <button onClick={() => setActiveToolId(null)} className="hover:text-white transition-colors">Tools</button>
+          <button onClick={() => handleToolSelect(null)} className="hover:text-white transition-colors">Home</button>
+          <button onClick={() => handleToolSelect(null)} className="hover:text-white transition-colors">Tools</button>
           <a href="#" className="hover:text-white transition-colors">Blog</a>
         </div>
 
@@ -86,7 +118,8 @@ function App() {
             toolId={activeToolId} 
             toolData={activeData.subTool} 
             category={activeData.category} 
-            onBack={() => setActiveToolId(null)}
+            onBack={() => handleToolSelect(null)}
+            onSelectTool={(id) => handleToolSelect(id)}
           />
       ) : (
           <>
@@ -116,7 +149,7 @@ function App() {
                             >
                                 <ToolCard 
                                     tool={tool} 
-                                    onSelectTool={(id) => setActiveToolId(id)}
+                                    onSelectTool={(id) => handleToolSelect(id)}
                                 />
                             </div>
                         ))}
@@ -125,7 +158,7 @@ function App() {
                             <div key={`mobile-${tool.id}`} className="block lg:hidden">
                                 <ToolCard 
                                     tool={tool} 
-                                    onSelectTool={(id) => setActiveToolId(id)}
+                                    onSelectTool={(id) => handleToolSelect(id)}
                                 />
                             </div>
                         ))}
@@ -140,7 +173,7 @@ function App() {
                     onClick={() => {
                         const allTools = TOOLS_DATA.flatMap(t => t.subTools);
                         const random = allTools[Math.floor(Math.random() * allTools.length)];
-                        setActiveToolId(random.id);
+                        handleToolSelect(random.id);
                     }}
                     className="relative group px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-sm tracking-wide transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]"
                 >
@@ -198,8 +231,6 @@ function App() {
               <a href="#" className="hover:text-cyan-400 transition-colors">Contact</a>
               <a href="#" className="hover:text-cyan-400 transition-colors">Terms of Service</a>
             </div>
-            
-            {/* Social Icons Removed */}
           </div>
           
           <div className="flex justify-end opacity-20">

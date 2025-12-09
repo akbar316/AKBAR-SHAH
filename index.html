@@ -7,6 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
+      // Polyfill global for libraries like pdf-lib
+      window.global = window;
+      // Polyfill Buffer if needed by some older modules
+      if (typeof window.Buffer === 'undefined') {
+        window.Buffer = { isBuffer: () => false };
+      }
+
       tailwind.config = {
         theme: {
           extend: {
@@ -26,9 +33,22 @@
     </script>
     <style>
       body {
-        background-color: #050508;
+        background-color: #02040a; /* Deep dark blue/black base */
+        background-image: 
+          /* Subtle radial glow at the top */
+          radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 75%),
+          /* Horizontal grid lines */
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          /* Vertical grid lines */
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 100% 100%, 40px 40px, 40px 40px;
+        background-position: 0 0, center center, center center;
+        background-attachment: fixed; /* Keeps background static while scrolling */
         color: white;
+        min-height: 100vh;
+        margin: 0;
       }
+      
       /* Custom scrollbar for a tech feel */
       ::-webkit-scrollbar {
         width: 8px;
@@ -50,12 +70,14 @@
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "pdfjs-dist": "https://esm.sh/pdfjs-dist@3.11.174",
     "pdfjs-dist/": "https://esm.sh/pdfjs-dist@3.11.174/",
     "jspdf": "https://esm.sh/jspdf@2.5.1",
     "pdf-lib": "https://esm.sh/pdf-lib@1.17.1",
-    "html2canvas": "https://esm.sh/html2canvas@1.4.1"
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
+    "fabric": "https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"
   }
 }
 </script>
