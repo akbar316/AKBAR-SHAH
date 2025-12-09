@@ -38,7 +38,8 @@ import {
   Pencil,
   Stamp,
   Mic,
-  BookCheck
+  BookCheck,
+  Aperture
 } from 'lucide-react';
 import { ToolCategory, SeoData } from './types';
 
@@ -151,6 +152,7 @@ export const TOOLS_DATA: ToolCategory[] = [
       { id: 'ai-chat', name: 'AI Chat Bot', icon: MessageSquare },
       { id: 'ai-summarizer', name: 'Text Summarizer', icon: Sparkles },
       { id: 'ai-prompt', name: 'Prompt Gen', icon: Cpu },
+      { id: 'ai-logo', name: 'Logo Generator', icon: Aperture },
     ]
   },
   {
@@ -479,6 +481,31 @@ export const SEO_DATA: Record<string, SeoData> = {
       ]
     },
     relatedTools: ['ai-chat', 'text-speech', 'text-counter']
+  },
+  'ai-logo': {
+    title: 'Free AI Logo Generator - Create Logos Online',
+    description: 'Generate professional logos instantly with AI. Create unique brand identities from text prompts for free.',
+    h1: 'AI Logo Generator',
+    content: {
+      what: 'A powerful AI tool that generates unique logo concepts based on your text description. It creates multiple variations instantly.',
+      why: 'Starting a new business or project? get professional logo ideas in seconds without hiring a designer.',
+      how: [
+        'Describe your logo idea (e.g., "Minimalist coffee shop logo").',
+        'Click "Generate Logos".',
+        'View 4 unique variations.',
+        'Download your favorite design.'
+      ],
+      features: [
+        '4 instant variations.',
+        'High-quality generation.',
+        'No watermark.',
+        'Unlimited attempts.'
+      ],
+      faq: [
+        { q: 'Is it free?', a: 'Yes, you can generate and download logos for free.' }
+      ]
+    },
+    relatedTools: ['ai-prompt', 'img-resize', 'img-convert']
   },
 
   // --- DEV TOOLS ---

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Bot, User, Copy, RefreshCw, Cpu, Eraser } from 'lucide-react';
+import { Sparkles, Send, Bot, User, Copy, RefreshCw, Cpu, Eraser, Aperture, Download } from 'lucide-react';
 
 interface AiToolsProps {
   toolId: string;
@@ -28,6 +28,10 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
     // Prompter State
     const [promptInput, setPromptInput] = useState('');
     const [promptOutput, setPromptOutput] = useState('');
+
+    // Logo Gen State
+    const [logoPrompt, setLogoPrompt] = useState('');
+    const [logoResults, setLogoResults] = useState<string[]>([]);
 
     // Auto-scroll chat
     useEffect(() => {
@@ -149,6 +153,46 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
             setPromptOutput(`Error: ${(error as Error).message}`);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleGenerateLogo = async () => {
+        if (!logoPrompt.trim() || loading) return;
+        setLoading(true);
+        setLogoResults([]);
+
+        // Using Pollinations AI for image generation (free, no key required for basic use)
+        // We generate 4 variants by using different random seeds
+        try {
+            const encoded = encodeURIComponent(logoPrompt + " logo design, vector style, white background, high quality, minimalist");
+            const newImages = [];
+            for (let i = 0; i < 4; i++) {
+                const seed = Math.floor(Math.random() * 100000);
+                newImages.push(`https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`);
+            }
+            // Simulate delay for UX
+            setTimeout(() => {
+                setLogoResults(newImages);
+                setLoading(false);
+            }, 1500);
+        } catch (e) {
+            notify("Generation failed");
+            setLoading(false);
+        }
+    };
+
+    const downloadImage = async (url: string, index: number) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `logo-${index + 1}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (e) {
+            notify("Download failed. Try right-click > Save Image.");
         }
     };
 
@@ -351,6 +395,75 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                                     )}
                                 </div>
                             </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* --- LOGO GENERATOR TOOL --- */}
+            {toolId === 'ai-logo' && (
+                <div className="w-full max-w-4xl mx-auto bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-2xl">
+                     <div className="p-8 border-b border-gray-800 bg-gradient-to-r from-pink-900/10 to-transparent">
+                        <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                            <Aperture className="text-pink-400" />
+                            AI Logo Generator
+                        </h3>
+                        <p className="text-gray-400 text-sm">
+                            Generate unique, professional logo concepts instantly.
+                        </p>
+                    </div>
+
+                    <div className="p-8 space-y-8">
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-2">Describe your Logo</label>
+                            <div className="flex gap-4">
+                                <input 
+                                    type="text" 
+                                    value={logoPrompt}
+                                    onChange={(e) => setLogoPrompt(e.target.value)}
+                                    placeholder="e.g. Minimalist fox head, orange geometry" 
+                                    className="flex-1 bg-black/30 border border-gray-700 rounded-lg p-4 text-white focus:border-pink-500 outline-none"
+                                    onKeyDown={(e) => e.key === 'Enter' && handleGenerateLogo()}
+                                />
+                                <button 
+                                    onClick={handleGenerateLogo}
+                                    disabled={loading || !logoPrompt}
+                                    className="bg-pink-600 hover:bg-pink-500 disabled:opacity-50 text-white px-8 rounded-lg font-bold transition-colors flex items-center gap-2"
+                                >
+                                    {loading ? <RefreshCw size={20} className="animate-spin"/> : <Sparkles size={20}/>}
+                                    Generate
+                                </button>
+                            </div>
+                        </div>
+
+                        {logoResults.length > 0 && (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4">
+                                {logoResults.map((url, idx) => (
+                                    <div key={idx} className="group relative aspect-square bg-black rounded-xl overflow-hidden border border-gray-800 hover:border-pink-500 transition-all">
+                                        <img src={url} alt={`Logo Variation ${idx+1}`} className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-3 transition-opacity">
+                                            <button 
+                                                onClick={() => downloadImage(url, idx)}
+                                                className="bg-pink-600 text-white p-2 rounded-full hover:bg-pink-500 transition-colors shadow-lg"
+                                                title="Download"
+                                            >
+                                                <Download size={20} />
+                                            </button>
+                                            <span className="text-xs font-bold text-white">Variation {idx + 1}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
+                        {loading && logoResults.length === 0 && (
+                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {[...Array(4)].map((_, i) => (
+                                    <div key={i} className="aspect-square bg-gray-800 rounded-xl animate-pulse flex items-center justify-center">
+                                        <Aperture className="text-gray-700 opacity-50" size={32}/>
+                                    </div>
+                                ))}
+                             </div>
                         )}
                     </div>
                 </div>
