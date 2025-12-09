@@ -170,11 +170,9 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                 const seed = Math.floor(Math.random() * 100000);
                 newImages.push(`https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`);
             }
-            // Simulate delay for UX
-            setTimeout(() => {
-                setLogoResults(newImages);
-                setLoading(false);
-            }, 1500);
+            // Removed artificial delay (setTimeout) for faster response
+            setLogoResults(newImages);
+            setLoading(false);
         } catch (e) {
             notify("Generation failed");
             setLoading(false);
