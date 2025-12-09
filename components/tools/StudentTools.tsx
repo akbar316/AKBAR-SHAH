@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { GraduationCap, Trash2, Plus, BookOpen, Copy, CheckCircle, RefreshCw, BookCheck, AlertTriangle, Check, ArrowRight, Sparkles } from 'lucide-react';
 
@@ -63,6 +64,25 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
         }, 200);
     };
 
+    // Helper to safely get API Key from various environment configurations
+    const getApiKey = () => {
+        // @ts-ignore - Handle Vite
+        if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) {
+            // @ts-ignore
+            return import.meta.env.VITE_OPENROUTER_API_KEY;
+        }
+        // @ts-ignore - Handle CRA/Next/Standard
+        if (typeof process !== 'undefined' && process.env) {
+            // @ts-ignore
+            if (process.env.REACT_APP_OPENROUTER_API_KEY) return process.env.REACT_APP_OPENROUTER_API_KEY;
+            // @ts-ignore
+            if (process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+            // @ts-ignore
+            if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
+        }
+        return '';
+    };
+
     // --- Grammar Helpers (AI) ---
     const improveText = async () => {
         if (!grammarInput.trim()) {
@@ -70,10 +90,10 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
             return;
         }
 
-        const apiKey = process.env.OPENROUTER_API_KEY;
+        const apiKey = getApiKey();
         if (!apiKey) {
             notify("API Key missing. Cannot connect to AI service.");
-            setGrammarOutput("Error: OPENROUTER_API_KEY not found. Please add it to your environment variables to use this feature.");
+            setGrammarOutput("Error: VITE_OPENROUTER_API_KEY not found. Please add it to your environment variables to use this feature.");
             return;
         }
 

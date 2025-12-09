@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, Bot, User, Copy, RefreshCw, Cpu, Eraser } from 'lucide-react';
 
@@ -33,12 +34,32 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [chatHistory]);
 
+    // Helper to safely get API Key from various environment configurations
+    const getApiKey = () => {
+        // @ts-ignore - Handle Vite
+        if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) {
+            // @ts-ignore
+            return import.meta.env.VITE_OPENROUTER_API_KEY;
+        }
+        // @ts-ignore - Handle CRA/Next/Standard
+        if (typeof process !== 'undefined' && process.env) {
+            // @ts-ignore
+            if (process.env.REACT_APP_OPENROUTER_API_KEY) return process.env.REACT_APP_OPENROUTER_API_KEY;
+            // @ts-ignore
+            if (process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+            // @ts-ignore
+            if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
+        }
+        return '';
+    };
+
     // --- Core API Logic ---
     const callOpenRouter = async (messages: ChatMessage[]) => {
-        const apiKey = process.env.OPENROUTER_API_KEY;
+        const apiKey = getApiKey();
+        
         if (!apiKey) {
-            notify("Error: OPENROUTER_API_KEY missing in environment variables.");
-            throw new Error("API Key Missing");
+            notify("Error: VITE_OPENROUTER_API_KEY missing.");
+            throw new Error("API Key Missing. Please add VITE_OPENROUTER_API_KEY to Vercel.");
         }
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -85,7 +106,7 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
             setChatHistory([...updatedHistory, { role: 'assistant', content: reply }]);
         } catch (error) {
             notify("Failed to get response.");
-            setChatHistory([...updatedHistory, { role: 'assistant', content: "Error: Could not connect to AI service." }]);
+            setChatHistory([...updatedHistory, { role: 'assistant', content: `Error: ${(error as Error).message}` }]);
         } finally {
             setLoading(false);
         }
@@ -105,6 +126,7 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
             setSummaryOutput(result);
         } catch (error) {
             notify("Summarization failed.");
+            setSummaryOutput(`Error: ${(error as Error).message}`);
         } finally {
             setLoading(false);
         }
@@ -124,6 +146,7 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
             setPromptOutput(result);
         } catch (error) {
             notify("Prompt generation failed.");
+            setPromptOutput(`Error: ${(error as Error).message}`);
         } finally {
             setLoading(false);
         }

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, Code, FileText, Type, BarChart3, RefreshCw, Sparkles, BrainCircuit, Copy } from 'lucide-react';
 import { SubTool } from '../../types';
@@ -15,11 +16,31 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ toolId, toolData, notify }) 
     const [showReasoning, setShowReasoning] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    // Helper to safely get API Key from various environment configurations
+    const getApiKey = () => {
+        // @ts-ignore - Handle Vite
+        if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) {
+            // @ts-ignore
+            return import.meta.env.VITE_OPENROUTER_API_KEY;
+        }
+        // @ts-ignore - Handle CRA/Next/Standard
+        if (typeof process !== 'undefined' && process.env) {
+            // @ts-ignore
+            if (process.env.REACT_APP_OPENROUTER_API_KEY) return process.env.REACT_APP_OPENROUTER_API_KEY;
+            // @ts-ignore
+            if (process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+            // @ts-ignore
+            if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
+        }
+        return '';
+    };
+
     const fetchSeoInsights = async (prompt: string) => {
-        const apiKey = process.env.OPENROUTER_API_KEY;
+        const apiKey = getApiKey();
+        
         if (!apiKey) {
             notify("Configuration Error: API Key missing.");
-            setSeoResult("Error: OPENROUTER_API_KEY not found in environment variables. Please add it to your Vercel project settings.");
+            setSeoResult("Error: VITE_OPENROUTER_API_KEY not found in environment variables. Please add it to your Vercel project settings.");
             return;
         }
 
