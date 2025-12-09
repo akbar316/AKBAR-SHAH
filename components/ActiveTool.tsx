@@ -20,7 +20,7 @@ interface ActiveToolProps {
   toolData: SubTool;
   category: ToolCategory;
   onBack: () => void;
-  onSelectTool?: (toolId: string) => void;
+  onSelectTool?: (toolId: string | null) => void;
 }
 
 export const ActiveTool: React.FC<ActiveToolProps> = ({ toolId, toolData, category, onBack, onSelectTool }) => {
@@ -31,7 +31,7 @@ export const ActiveTool: React.FC<ActiveToolProps> = ({ toolId, toolData, catego
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleToolSelect = (id: string) => {
+  const handleToolSelect = (id: string | null) => {
       if (onSelectTool) {
           onSelectTool(id);
       }
@@ -78,6 +78,7 @@ export const ActiveTool: React.FC<ActiveToolProps> = ({ toolId, toolData, catego
         {/* SEO Content Section */}
         <SeoContent 
             data={SEO_DATA[toolId]} 
+            category={category}
             onSelectTool={handleToolSelect}
         />
     </ToolLayout>

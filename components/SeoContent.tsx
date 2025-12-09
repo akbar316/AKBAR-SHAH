@@ -1,14 +1,15 @@
 import React, { useEffect } from 'react';
-import { SeoData, SubTool } from '../types';
+import { SeoData, SubTool, ToolCategory } from '../types';
 import { TOOLS_DATA } from '../constants';
-import { ArrowRight, HelpCircle, BookOpen, Layers } from 'lucide-react';
+import { ArrowRight, HelpCircle, BookOpen, Layers, Home, Grid } from 'lucide-react';
 
 interface SeoContentProps {
   data?: SeoData;
-  onSelectTool: (id: string) => void;
+  category: ToolCategory;
+  onSelectTool: (id: string | null) => void;
 }
 
-export const SeoContent: React.FC<SeoContentProps> = ({ data, onSelectTool }) => {
+export const SeoContent: React.FC<SeoContentProps> = ({ data, category, onSelectTool }) => {
   // Update Meta Tags
   useEffect(() => {
     if (data) {
@@ -38,13 +39,14 @@ export const SeoContent: React.FC<SeoContentProps> = ({ data, onSelectTool }) =>
         if (found) related.push(found);
       }
     });
-    return related;
+    // Return max 3 related tools as per SEO requirement
+    return related.slice(0, 3);
   };
 
   const relatedList = getRelatedTools();
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-16 px-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="w-full max-w-7xl mx-auto mt-16 px-4 sm:px-6 lg:px-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-800 to-transparent mb-12"></div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -117,6 +119,32 @@ export const SeoContent: React.FC<SeoContentProps> = ({ data, onSelectTool }) =>
 
         {/* Sidebar Column */}
         <div className="space-y-8">
+           
+           {/* Navigation Links for SEO */}
+           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                 <Grid className="text-cyan-500" size={20}/> Quick Navigation
+              </h3>
+              <div className="space-y-2">
+                  <a 
+                    href="/"
+                    onClick={(e) => { e.preventDefault(); onSelectTool(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-black/30 hover:bg-gray-800 border border-gray-800 hover:border-cyan-500/30 transition-all text-gray-300 hover:text-white group"
+                  >
+                      <Home size={18} className="text-gray-500 group-hover:text-cyan-400"/>
+                      <span className="text-sm font-medium">Home</span>
+                  </a>
+                  
+                  <button 
+                    onClick={() => { onSelectTool(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-black/30 hover:bg-gray-800 border border-gray-800 hover:border-cyan-500/30 transition-all text-gray-300 hover:text-white group text-left"
+                  >
+                      <category.mainIcon size={18} className="text-gray-500 group-hover:text-cyan-400"/>
+                      <span className="text-sm font-medium">All {category.title}</span>
+                  </button>
+              </div>
+           </div>
+
            {/* Related Tools */}
            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 sticky top-24">
               <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
@@ -139,6 +167,9 @@ export const SeoContent: React.FC<SeoContentProps> = ({ data, onSelectTool }) =>
                       <ArrowRight size={14} className="text-gray-600 group-hover:text-cyan-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"/>
                    </button>
                  ))}
+                 {relatedList.length === 0 && (
+                    <p className="text-sm text-gray-500 italic">No related tools found.</p>
+                 )}
               </div>
            </div>
         </div>
