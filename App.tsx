@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Box, Shield, Zap, Cloud, Menu, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Shield, Zap, Cloud, Menu, Search, X } from 'lucide-react';
 import { ToolCard } from './components/ToolCard';
 import { CircuitBackground } from './components/CircuitBackground';
 import { ActiveTool } from './components/ActiveTool';
@@ -10,6 +10,11 @@ import { SubTool, ToolCategory } from './types';
 
 function App() {
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
+  
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   // SEO: Sync State with URL Query Parameters
   useEffect(() => {
@@ -29,6 +34,17 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+            setSearchResults([]);
+        }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Update URL when tool is selected (Push State)
   const handleToolSelect = (id: string | null) => {
       setActiveToolId(id);
@@ -41,6 +57,29 @@ function App() {
           const newUrl = window.location.pathname;
           window.history.pushState({}, '', newUrl);
           window.scrollTo(0, 0);
+      }
+      // Clear search on selection
+      setSearchQuery('');
+      setSearchResults([]);
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const query = e.target.value;
+      setSearchQuery(query);
+
+      if (query.trim().length > 0) {
+          const results: any[] = [];
+          TOOLS_DATA.forEach(cat => {
+              cat.subTools.forEach(tool => {
+                  if (tool.name.toLowerCase().includes(query.toLowerCase()) || 
+                      cat.title.toLowerCase().includes(query.toLowerCase())) {
+                      results.push({...tool, categoryName: cat.title});
+                  }
+              });
+          });
+          setSearchResults(results.slice(0, 6)); // Limit results
+      } else {
+          setSearchResults([]);
       }
   };
 
@@ -94,25 +133,75 @@ function App() {
       <CircuitBackground />
       
       {/* Navigation */}
-      <nav className="relative z-50 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+      <nav className="relative z-50 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between gap-4">
+        {/* Logo */}
         <div 
-            className="flex items-center gap-2 cursor-pointer" 
+            className="flex items-center gap-2 cursor-pointer flex-shrink-0" 
             onClick={() => handleToolSelect(null)}
         >
           <div className="text-cyan-400">
             <Box size={32} strokeWidth={2} />
           </div>
-          <span className="text-2xl font-bold tracking-tight text-white">Dicetools</span>
+          <span className="text-2xl font-bold tracking-tight text-white hidden sm:block">Dicetools</span>
+        </div>
+
+        {/* Search Bar (Centered) */}
+        <div className="hidden md:flex flex-1 max-w-lg mx-auto relative" ref={searchRef}>
+            <div className="relative w-full group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search size={16} className="text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                </div>
+                <input 
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    className="block w-full pl-10 pr-10 py-2.5 border border-gray-800 rounded-full leading-5 bg-gray-900/80 backdrop-blur-md text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-gray-900 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 sm:text-sm transition-all shadow-lg shadow-black/20"
+                    placeholder="Search tools (e.g., PDF Merge, Resize)..."
+                />
+                {searchQuery && (
+                    <button 
+                        onClick={() => { setSearchQuery(''); setSearchResults([]); }}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white transition-colors"
+                    >
+                        <X size={16} />
+                    </button>
+                )}
+            </div>
+
+            {/* Search Results Dropdown */}
+            {searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-xl border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                    <div className="py-2">
+                        {searchResults.map((result) => (
+                            <button
+                                key={result.id}
+                                onClick={() => handleToolSelect(result.id)}
+                                className="w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-3 transition-colors border-b border-gray-800 last:border-0 group"
+                            >
+                                <div className="p-2 bg-gray-800 rounded-lg text-cyan-400 group-hover:bg-cyan-900/30 group-hover:text-cyan-300 transition-colors">
+                                    <result.icon size={18} />
+                                </div>
+                                <div>
+                                    <div className="text-sm font-medium text-gray-200 group-hover:text-white">{result.name}</div>
+                                    <div className="text-xs text-gray-500">{result.categoryName}</div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
         
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
+        {/* Desktop Links */}
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400 flex-shrink-0">
           <button onClick={() => handleToolSelect(null)} className="hover:text-white transition-colors">Home</button>
           <button onClick={() => handleToolSelect(null)} className="hover:text-white transition-colors">Tools</button>
           <button onClick={() => handleToolSelect('about')} className="hover:text-white transition-colors">About</button>
           <button onClick={() => handleToolSelect('contact')} className="hover:text-white transition-colors">Contact</button>
         </div>
 
-        <button className="md:hidden text-white" onClick={() => handleToolSelect(null)}>
+        {/* Mobile Menu Toggle */}
+        <button className="md:hidden text-white ml-auto" onClick={() => handleToolSelect(null)}>
           <Menu size={24} />
         </button>
       </nav>
