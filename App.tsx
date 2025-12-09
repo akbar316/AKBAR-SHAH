@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Box, Shield, Zap, Cloud, Menu, ChevronDown } from 'lucide-react';
 import { ToolCard } from './components/ToolCard';
 import { CircuitBackground } from './components/CircuitBackground';
 import { ActiveTool } from './components/ActiveTool';
+import { LegalPageContainer } from './components/LegalPages';
 import { TOOLS_DATA } from './constants';
 import { SubTool, ToolCategory } from './types';
 
@@ -38,6 +40,7 @@ function App() {
       } else {
           const newUrl = window.location.pathname;
           window.history.pushState({}, '', newUrl);
+          window.scrollTo(0, 0);
       }
   };
 
@@ -52,6 +55,7 @@ function App() {
   };
 
   const activeData = getActiveToolData();
+  const isLegalPage = ['about', 'contact', 'terms', 'privacy'].includes(activeToolId || '');
 
   // Helper for specific 3D rotations based on column index (0-3)
   const getTransformStyles = (index: number) => {
@@ -104,16 +108,19 @@ function App() {
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
           <button onClick={() => handleToolSelect(null)} className="hover:text-white transition-colors">Home</button>
           <button onClick={() => handleToolSelect(null)} className="hover:text-white transition-colors">Tools</button>
-          <a href="#" className="hover:text-white transition-colors">Blog</a>
+          <button onClick={() => handleToolSelect('about')} className="hover:text-white transition-colors">About</button>
+          <button onClick={() => handleToolSelect('contact')} className="hover:text-white transition-colors">Contact</button>
         </div>
 
-        <button className="md:hidden text-white">
+        <button className="md:hidden text-white" onClick={() => handleToolSelect(null)}>
           <Menu size={24} />
         </button>
       </nav>
 
       {/* Main Content Area */}
-      {activeToolId && activeData ? (
+      {isLegalPage && activeToolId ? (
+          <LegalPageContainer pageId={activeToolId} onBack={() => handleToolSelect(null)} />
+      ) : activeToolId && activeData ? (
           <ActiveTool 
             toolId={activeToolId} 
             toolData={activeData.subTool} 
@@ -131,6 +138,9 @@ function App() {
                 <p className="text-gray-500 text-lg max-w-2xl mx-auto">
                 Streamline your workflow with our comprehensive suite of developer, designer, and productivity tools.
                 </p>
+                <div className="mt-8 flex justify-center gap-4">
+                   <button onClick={() => handleToolSelect('about')} className="px-6 py-2 rounded-full border border-gray-700 text-sm text-gray-400 hover:text-white hover:border-gray-500 transition-all">Learn More</button>
+                </div>
             </header>
 
             {/* Tools Grid Section */}
@@ -226,10 +236,10 @@ function App() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center mb-12">
             <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 md:mb-0">
-              <a href="#" className="hover:text-cyan-400 transition-colors">About Us</a>
-              <a href="#" className="hover:text-cyan-400 transition-colors">Blog</a>
-              <a href="#" className="hover:text-cyan-400 transition-colors">Contact</a>
-              <a href="#" className="hover:text-cyan-400 transition-colors">Terms of Service</a>
+              <button onClick={() => handleToolSelect('about')} className="hover:text-cyan-400 transition-colors">About Us</button>
+              <button onClick={() => handleToolSelect('contact')} className="hover:text-cyan-400 transition-colors">Contact</button>
+              <button onClick={() => handleToolSelect('terms')} className="hover:text-cyan-400 transition-colors">Terms of Service</button>
+              <button onClick={() => handleToolSelect('privacy')} className="hover:text-cyan-400 transition-colors">Privacy Policy</button>
             </div>
           </div>
           
