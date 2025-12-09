@@ -86,6 +86,7 @@ export const TOOLS_DATA: ToolCategory[] = [
     borderColor: 'border-emerald-500/20',
     shadowColor: 'shadow-emerald-500/10',
     subTools: [
+      { id: 'dev-web-builder', name: 'AI Web Builder', icon: LayoutTemplate },
       { id: 'dev-json', name: 'JSON Formatter', icon: Braces },
       { id: 'dev-api', name: 'API Tester', icon: Terminal },
       { id: 'dev-ask', name: 'Data Generator', icon: MessageSquare },
@@ -509,6 +510,31 @@ export const SEO_DATA: Record<string, SeoData> = {
   },
 
   // --- DEV TOOLS ---
+  'dev-web-builder': {
+    title: 'AI Website Builder - Generate Website Code Online',
+    description: 'Free AI website generator. Create full HTML/Tailwind websites from text descriptions. Preview and edit code instantly.',
+    h1: 'AI Website Builder & Code Generator',
+    content: {
+      what: 'An advanced AI assistant that generates complete, responsive website templates based on your instructions. It outputs ready-to-use HTML and Tailwind CSS code.',
+      why: 'Speed up your development process by letting AI build the boilerplate, layout, and styling. Perfect for prototyping ideas or creating simple landing pages.',
+      how: [
+        'Describe your website (e.g., "Portfolio for a photographer").',
+        'Click "Generate Website".',
+        'Switch between "Code View" and "Live Preview".',
+        'Copy the code to your project.'
+      ],
+      features: [
+        'Generates HTML + Tailwind CSS.',
+        'Responsive mobile-friendly designs.',
+        'Includes Hero, Features, Contact sections.',
+        'Live interactive preview.'
+      ],
+      faq: [
+        { q: 'Do I need a backend?', a: 'The generated code is static HTML/CSS, which you can host anywhere (Vercel, Netlify, GitHub Pages).' }
+      ]
+    },
+    relatedTools: ['dev-json', 'seo-meta', 'ai-chat']
+  },
   'dev-json': {
     title: 'JSON Formatter & Validator - Prettify JSON Online',
     description: 'Format, validate, and beautify JSON data instantly. Best free online JSON formatter for developers.',
@@ -557,6 +583,6 @@ export const SEO_DATA: Record<string, SeoData> = {
         { q: 'What is a 4.0 scale?', a: 'It is the standard grading scale where an A equals 4 points, B equals 3, etc.' }
       ]
     },
-    relatedTools: ['student-citation', 'student-plagiarism', 'student-grammar']
+    relatedTools: ['student-citation', 'student-grammar', 'student-plagiarism']
   }
 };
