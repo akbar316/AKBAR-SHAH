@@ -7,10 +7,14 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { jsPDF } from 'jspdf';
 import { PDFDocument } from 'pdf-lib';
 
-// Fix for PDF.js import structure
+// Fix for PDF.js import structure and worker initialization
 const pdfjs = (pdfjsLib as any).default || pdfjsLib;
-if (pdfjs.GlobalWorkerOptions) {
-    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+try {
+  if (pdfjs && pdfjs.GlobalWorkerOptions) {
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+  }
+} catch (e) {
+  console.warn("Failed to set PDF worker source", e);
 }
 
 interface PdfToolsProps {

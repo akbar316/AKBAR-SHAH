@@ -173,85 +173,315 @@ export const TOOLS_DATA: ToolCategory[] = [
 ];
 
 export const SEO_DATA: Record<string, SeoData> = {
+  // --- PDF TOOLS ---
   'pdf-merge-split': {
-    title: 'Split & Merge PDF Files Free Online - Dicetools',
-    description: 'Combine multiple PDFs into one or extract specific pages from a document. Fast, secure, and free online PDF splitter and merger.',
-    h1: 'Split & Merge PDF Files',
+    title: 'Merge PDF & Split PDF Online Free - Dicetools',
+    description: 'Best free online tool to merge PDF files or split PDF pages. Fast, secure, and no installation required. Try the PDF Merger today.',
+    h1: 'Merge & Split PDF Files Online',
     content: {
-      what: 'This dual-function tool allows you to organize your PDF documents. "Merge" lets you combine multiple PDF files into a single document, while "Split" enables you to extract specific pages to create a new file.',
-      why: 'Managing large PDF reports or compiling scattered documents can be tedious. This tool simplifies document organization without the need for expensive software like Adobe Acrobat.',
+      what: 'A comprehensive PDF utility that functions as both a PDF Merger and a PDF Splitter. Combine multiple documents into one or extract specific pages to create a new file.',
+      why: 'Organizing digital documents shouldn\'t require expensive software. Whether you need to combine reports or separate chapters, this tool handles it securely in your browser.',
       how: [
-        'Select "Split PDF" or "Merge PDFs" from the toggle.',
+        'Choose "Merge" or "Split" mode.',
         'Upload your PDF file(s).',
-        'For Split: Click the pages you want to keep.',
-        'For Merge: Drag and drop files to reorder them.',
-        'Click the action button to download your new PDF.'
+        'For Merge: Drag and drop to reorder files.',
+        'For Split: Click the pages you wish to extract.',
+        'Download your newly organized PDF document.'
       ],
       features: [
-        'Lossless Processing: Keeps your text and quality intact.',
-        'Secure: Files are processed in your browser.',
-        'Drag & Drop Interface.',
-        'Multi-file selection.'
+        'Lossless quality preservation.',
+        'Secure client-side processing.',
+        'Multi-file batch merging.',
+        'Visual page selector.'
       ],
       faq: [
-        { q: 'Is this tool free?', a: 'Yes, it is completely free to use with no hidden charges.' },
-        { q: 'Are my files saved?', a: 'No, all processing happens in your browser. Your files are never uploaded to a server.' }
+        { q: 'Is it free?', a: 'Yes, 100% free with no limits.' },
+        { q: 'Is it secure?', a: 'Yes, files are processed locally in your browser and never uploaded to a server.' }
       ]
     },
     relatedTools: ['pdf-compress', 'pdf-convert', 'pdf-image']
   },
   'pdf-compress': {
-    title: 'Compress PDF Online - Reduce File Size Free | Dicetools',
-    description: 'Reduce PDF file size online for free without losing quality. optimize PDF documents for email attachments and web upload.',
-    h1: 'Free Online PDF Compressor',
+    title: 'PDF Compressor - Compress PDF Online Free',
+    description: 'Reduce PDF file size online instantly. Best free PDF compressor to optimize documents for email and web without quality loss.',
+    h1: 'Online PDF Compressor',
     content: {
-      what: 'The PDF Compressor tool reduces the file size of your documents by optimizing images and internal structures, making them easier to share via email or upload to websites.',
-      why: 'Large PDF files are slow to upload and often blocked by email attachment limits. Compressing them saves storage space and bandwidth.',
+      what: 'This tool reduces the file size of PDF documents by optimizing internal assets and images, making them smaller and easier to share.',
+      why: 'Email attachments often have size limits (e.g., 25MB). Compressing your PDF allows you to send large reports, portfolios, and scanned documents easily.',
       how: [
-        'Upload the PDF you want to compress.',
-        'Choose a compression level: Extreme, Recommended, or Less.',
-        'Click "Compress PDF".',
-        'Download the optimized file.'
+        'Upload your large PDF file.',
+        'Select compression level (Recommended is best for most users).',
+        'Wait for the optimization process.',
+        'Download the smaller PDF file.'
       ],
       features: [
-        'Three compression levels.',
-        'Real-time size reduction estimates.',
-        'Maintains document readability.',
-        'Works on mobile and desktop.'
+        'Up to 80% file size reduction.',
+        'Preserves text clarity.',
+        'Works on mobile devices.',
+        'No watermarks.'
       ],
       faq: [
-        { q: 'Will the quality decrease?', a: 'The "Recommended" setting balances quality and size perfectly. "Extreme" may reduce image quality slightly.' },
-        { q: 'What is the max file size?', a: 'We recommend files under 50MB for best browser performance.' }
+        { q: 'Does it affect quality?', a: 'Our intelligent algorithm maintains high visual quality while removing redundant data.' }
       ]
     },
     relatedTools: ['pdf-merge-split', 'pdf-convert', 'img-resize']
   },
+  'pdf-image': {
+    title: 'Image to PDF Converter - JPG to PDF Online',
+    description: 'Convert JPG, PNG, and other images to PDF online for free. Create a single PDF document from multiple photos instantly.',
+    h1: 'Image to PDF Converter',
+    content: {
+      what: 'A simple tool to convert image files (JPG, PNG, WEBP) into a professional PDF document. You can also extract images from a PDF.',
+      why: 'Perfect for creating portfolios, sharing scanned receipts, or compiling photos into a single shareable file.',
+      how: [
+        'Select "Images to PDF".',
+        'Upload one or more images.',
+        'Click "Generate PDF".',
+        'Your images will be compiled into a single document.'
+      ],
+      features: [
+        'Supports multiple images.',
+        'Maintains original image quality.',
+        'Fast and private.',
+        'Reverse conversion (PDF to Image) supported.'
+      ],
+      faq: [
+        { q: 'Can I reorder images?', a: 'Yes, upload them in order or delete and re-add to organize.' }
+      ]
+    },
+    relatedTools: ['pdf-convert', 'img-resize', 'pdf-compress']
+  },
+  'pdf-convert': {
+    title: 'PDF to Word Converter & PDF to Text - Free Online',
+    description: 'Convert PDF to Word (Text) or Images. Extract text from PDF files easily online. Fast and accurate PDF conversion tool.',
+    h1: 'PDF to Text & Image Converter',
+    content: {
+      what: 'Convert your PDF documents into editable text files (.txt) or image formats (.jpg/.png). Great for extracting content from read-only files.',
+      why: 'Editing PDFs can be hard. Converting them to text allows you to use the content in Word or other editors easily.',
+      how: [
+        'Upload the PDF file.',
+        'Select "To Text", "To JPG", or "To PNG".',
+        'Click "Download Processed File".'
+      ],
+      features: [
+        'Extracts raw text accurately.',
+        'High-resolution image rendering.',
+        'Browser-based security.',
+        'Simple interface.'
+      ],
+      faq: [
+        { q: 'Does it keep formatting?', a: 'The "To Text" mode extracts raw text. For layout preservation, use "To Image".' }
+      ]
+    },
+    relatedTools: ['pdf-merge-split', 'text-extractor', 'pdf-image']
+  },
+
+  // --- IMAGE TOOLS ---
   'img-resize': {
-    title: 'Free Online Image Resizer - Resize JPG, PNG, WEBP',
-    description: 'Resize images online in pixels or percentage. Perfect for Social Media, Web, and Email. Fast, free, and secure image resizing tool.',
+    title: 'Photo Resizer - Resize Image Online Free',
+    description: 'Free online image resizer. Resize JPG, PNG, and WEBP images by pixels or percentage. Perfect for social media posts and web.',
     h1: 'Online Image Resizer',
     content: {
-      what: 'A powerful tool to change the dimensions (width and height) of your images. It supports common formats like JPG, PNG, and WEBP.',
-      why: 'Social media platforms and websites require specific image dimensions. Resizing ensures your images look professional and load quickly.',
+      what: 'Change the dimensions of your photos instantly. Resize by exact pixels or percentage scale while maintaining the aspect ratio.',
+      why: 'Optimized images load faster on websites and look better on social media. Use this to prepare your content for Instagram, Twitter, or your blog.',
       how: [
-        'Upload your image.',
-        'Choose "Pixels" or "Percentage".',
-        'Enter new width or height (Aspect ratio is locked by default).',
+        'Upload an image.',
+        'Enter new width/height or select a preset.',
         'Click "Download Image".'
       ],
       features: [
-        'Social Media Presets (Instagram, Twitter, YouTube).',
-        'Maintain Aspect Ratio lock.',
+        'Social Media Presets (IG, YouTube, Twitter).',
+        'Aspect Ratio Lock.',
         'High-quality resampling.',
-        'No watermarks.'
+        'Supports transparency.'
       ],
       faq: [
-        { q: 'Does it support transparent PNGs?', a: 'Yes, transparency is preserved during resizing.' },
-        { q: 'Can I resize multiple images?', a: 'Currently, this tool processes one image at a time for maximum precision.' }
+        { q: 'Will my image look pixelated?', a: 'We use high-quality resampling algorithms to keep your images sharp.' }
       ]
     },
     relatedTools: ['img-crop', 'img-convert', 'img-watermark']
   },
+  'img-crop': {
+    title: 'Image Cropper - Crop Photo Online Free',
+    description: 'Crop images online with ease. Cut photo to specific aspect ratios like 16:9, 4:3, or custom sizes. Free image cropping tool.',
+    h1: 'Free Online Image Cropper',
+    content: {
+      what: 'Trim unwanted outer areas from your photos. Focus on the subject by cropping to specific shapes or custom rectangles.',
+      why: 'Framing is key in photography. Cropping allows you to improve the composition of your shots post-capture.',
+      how: [
+        'Upload your photo.',
+        'Drag the corners of the box to select area.',
+        'Use presets like 1:1 for square crops.',
+        'Click "Download Image".'
+      ],
+      features: [
+        'Interactive drag & resize.',
+        'Preset aspect ratios.',
+        'Rotation and Flip support.',
+        'Rule of thirds grid.'
+      ],
+      faq: [
+        { q: 'What formats are supported?', a: 'JPG, PNG, and WEBP.' }
+      ]
+    },
+    relatedTools: ['img-resize', 'img-filter', 'img-convert']
+  },
+
+  // --- TEXT TOOLS ---
+  'text-counter': {
+    title: 'Word Counter & Character Counter Online',
+    description: 'Free online word counter and character count tool. Check text length for essays, tweets, and SEO descriptions instantly.',
+    h1: 'Word & Character Counter',
+    content: {
+      what: 'A real-time analysis tool that counts words, characters, sentences, and paragraphs in your text.',
+      why: 'Essential for writers meeting essay limits, social media managers writing tweets (280 chars), and SEOs writing meta descriptions.',
+      how: [
+        'Paste your text into the box.',
+        'View the stats instantly below.',
+        'No button click required.'
+      ],
+      features: [
+        'Real-time counting.',
+        'Counts spaces and no-spaces.',
+        'Estimated reading time.',
+        'Simple and clean UI.'
+      ],
+      faq: [
+        { q: 'Is there a limit?', a: 'No, you can paste as much text as your browser can handle.' }
+      ]
+    },
+    relatedTools: ['text-diff', 'text-speech', 'student-grammar']
+  },
+  'text-speech': {
+    title: 'Text to Speech & Speech to Text Online',
+    description: 'Convert text to voice (TTS) and voice to text (STT) online. Free AI speech converter and transcription tool.',
+    h1: 'Text to Speech & Transcription',
+    content: {
+      what: 'A dual-mode accessibility tool. Convert written text into spoken audio (TTS) or transcribe microphone input into text (STT).',
+      why: 'Listen to articles while multitasking, or dictate notes faster than you can type.',
+      how: [
+        'Select mode (TTS or STT).',
+        'TTS: Paste text and click Play.',
+        'STT: Click mic and start speaking.',
+        'Download the audio or transcript.'
+      ],
+      features: [
+        'Natural AI voices.',
+        'Download WAV audio.',
+        'Real-time dictation.',
+        'Pitch and Rate control.'
+      ],
+      faq: [
+        { q: 'Is it accurate?', a: 'It uses your browser\'s native speech engine, which is generally very accurate for clear speech.' }
+      ]
+    },
+    relatedTools: ['text-counter', 'ai-summarizer', 'ai-chat']
+  },
+
+  // --- STUDENT TOOLS ---
+  'student-grammar': {
+    title: 'Grammar Checker Online Free - Correct Grammar & Spelling',
+    description: 'Free AI grammar checker and spell checker. Fix grammar mistakes, punctuation, and improve writing style instantly.',
+    h1: 'Free Online Grammar Checker',
+    content: {
+      what: 'An intelligent writing assistant that scans your text for grammatical errors, spelling mistakes, and style improvements.',
+      why: 'Submit error-free essays, emails, and reports. Good grammar improves credibility and readability.',
+      how: [
+        'Paste your text into the input box.',
+        'Click "Improve Writing".',
+        'View the corrected version with suggestions.',
+        'Copy the improved text.'
+      ],
+      features: [
+        'AI-powered analysis.',
+        'Fixes spelling & punctuation.',
+        'Improves sentence flow.',
+        'Subject-verb agreement checks.'
+      ],
+      faq: [
+        { q: 'How does it work?', a: 'It uses advanced language models to understand context and suggest corrections.' }
+      ]
+    },
+    relatedTools: ['student-plagiarism', 'student-citation', 'text-counter']
+  },
+  'student-plagiarism': {
+    title: 'Plagiarism Checker Free - Check Originality Online',
+    description: 'Free plagiarism checker for students and writers. Check text for duplicate content and uniqueness score online.',
+    h1: 'Free Plagiarism Checker',
+    content: {
+      what: 'A tool to scan your text against common patterns to estimate its originality and uniqueness.',
+      why: 'Avoid academic penalties and ensure your content is unique for SEO ranking.',
+      how: [
+        'Paste your essay or article.',
+        'Click "Check".',
+        'Wait for the scan to complete.',
+        'Review the uniqueness score.'
+      ],
+      features: [
+        'Percentage based scoring.',
+        'Readability analysis.',
+        'Fast scanning.',
+        'No sign-up required.'
+      ],
+      faq: [
+        { q: 'Is it 100% accurate?', a: 'It provides an estimate based on pattern matching. For critical academic work, use university-provided tools.' }
+      ]
+    },
+    relatedTools: ['student-grammar', 'student-citation', 'student-gpa']
+  },
+  'student-citation': {
+    title: 'Citation Generator - APA, MLA, Chicago Format',
+    description: 'Free citation machine. Generate APA, MLA, Chicago, and Harvard citations for websites and books instantly.',
+    h1: 'Free Citation Generator',
+    content: {
+      what: 'Create properly formatted bibliographic references for your papers in APA, MLA, Chicago, or Harvard styles.',
+      why: 'Citing sources correctly is mandatory for academic integrity but hard to memorize. This tool automates it.',
+      how: [
+        'Select Citation Style (e.g., APA).',
+        'Choose Source Type (Website/Book).',
+        'Enter details (Author, Title, Year).',
+        'Click Generate to copy.'
+      ],
+      features: [
+        'Supports 4 major styles.',
+        'Instant formatting.',
+        'One-click copy.',
+        'Clean interface.'
+      ],
+      faq: [
+        { q: 'Is this current?', a: 'Yes, we update formats to match the latest style guides.' }
+      ]
+    },
+    relatedTools: ['student-gpa', 'student-grammar', 'student-plagiarism']
+  },
+
+  // --- AI TOOLS ---
+  'ai-summarizer': {
+    title: 'Text Summarizer - Summarize Articles Online',
+    description: 'Free AI text summarizer. Condense long articles, essays, and text into short summaries instantly.',
+    h1: 'AI Text Summarizer',
+    content: {
+      what: 'An Artificial Intelligence tool that reads long blocks of text and outputs the key points in a concise summary.',
+      why: 'Save time reading long reports, research papers, or news articles. Get the gist in seconds.',
+      how: [
+        'Paste the long text.',
+        'Click the summarize button.',
+        'Read or copy the generated abstract.'
+      ],
+      features: [
+        'AI-powered understanding.',
+        'Bullet point extraction.',
+        'Adjustable length (via prompt).',
+        'Instant results.'
+      ],
+      faq: [
+        { q: 'Is there a word limit?', a: 'It works best with texts under 2000 words.' }
+      ]
+    },
+    relatedTools: ['ai-chat', 'text-speech', 'text-counter']
+  },
+
+  // --- DEV TOOLS ---
   'dev-json': {
     title: 'JSON Formatter & Validator - Prettify JSON Online',
     description: 'Format, validate, and beautify JSON data instantly. Best free online JSON formatter for developers.',
@@ -276,32 +506,6 @@ export const SEO_DATA: Record<string, SeoData> = {
       ]
     },
     relatedTools: ['dev-api', 'text-diff', 'util-qrcode']
-  },
-  'text-speech': {
-    title: 'Text to Speech & Speech to Text Converter Online',
-    description: 'Convert text to natural sounding speech or transcribe voice to text online. Free AI-powered speech synthesis and recognition.',
-    h1: 'Speech Converter (TTS & STT)',
-    content: {
-      what: 'A versatile audio tool that works two ways: "Text to Speech" reads your text aloud using AI voices, and "Speech to Text" transcribes your voice or audio files into written text.',
-      why: 'Great for accessibility, proofreading by listening, creating audio content, or quickly dictating notes without typing.',
-      how: [
-        'Select "Text to Speech" or "Speech to Text".',
-        'For TTS: Paste text, select a voice, and click Play.',
-        'For STT: Click the microphone and start speaking.',
-        'Download the audio or transcript when done.'
-      ],
-      features: [
-        'Multiple languages and accents.',
-        'Pitch and Speed controls.',
-        'Download audio (WAV/MP3).',
-        'File upload for transcription.'
-      ],
-      faq: [
-        { q: 'Which browsers are supported?', a: 'Chrome, Edge, and Safari offer the best support for Web Speech API features.' },
-        { q: 'Is there a character limit?', a: 'No strict limit, but very long texts may be processed in chunks.' }
-      ]
-    },
-    relatedTools: ['text-counter', 'text-extractor', 'ai-summarizer']
   },
   'student-gpa': {
     title: 'College GPA Calculator - Calculate Grade Point Average',

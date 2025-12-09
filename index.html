@@ -7,11 +7,31 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
-      // Polyfill global for libraries like pdf-lib
+      // Robust Polyfills for Node.js environments in Browser
       window.global = window;
-      // Polyfill Buffer if needed by some older modules
+      window.process = { env: { NODE_ENV: 'production' } };
+      
       if (typeof window.Buffer === 'undefined') {
-        window.Buffer = { isBuffer: () => false };
+        window.Buffer = {
+          isBuffer: (obj) => obj && obj.constructor && obj.constructor.name === 'Buffer',
+          from: (data, encoding) => {
+            if (typeof data === 'string') {
+              return new TextEncoder().encode(data);
+            }
+            return new Uint8Array(data);
+          },
+          alloc: (size) => new Uint8Array(size),
+          concat: (list) => {
+            const length = list.reduce((acc, curr) => acc + curr.length, 0);
+            const result = new Uint8Array(length);
+            let offset = 0;
+            list.forEach(item => {
+              result.set(item, offset);
+              offset += item.length;
+            });
+            return result;
+          }
+        };
       }
 
       tailwind.config = {
@@ -77,7 +97,7 @@
     "jspdf": "https://esm.sh/jspdf@2.5.1",
     "pdf-lib": "https://esm.sh/pdf-lib@1.17.1",
     "html2canvas": "https://esm.sh/html2canvas@1.4.1",
-    "fabric": "https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"
+    "fabric": "https://esm.sh/fabric@5.3.0"
   }
 }
 </script>
