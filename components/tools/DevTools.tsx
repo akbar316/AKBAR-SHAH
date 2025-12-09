@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { RefreshCw, Play, Copy } from 'lucide-react';
-import { jwtDecode } from 'jwt-decode';
-import beautify from 'beautify';
 
 interface DevToolsProps {
   toolId: string;
@@ -23,12 +21,7 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                 setLoading(true);
                 setTimeout(() => {
                     setLoading(false);
-                    setOutputText(`// Mock Response for ${inputText || 'GET /api'}
-{
-  "status": 200,
-  "message": "Success",
-  "data": { "id": 1, "mock": true }
-}`);
+                    setOutputText(`// Mock Response for ${inputText || 'GET /api'}\n{\n  "status": 200,\n  "message": "Success",\n  "data": { "id": 1, "mock": true }\n}`);
                 }, 1000);
             } else if (toolId === 'dev-ask') {
                 if (inputText.toLowerCase().includes('uuid') || !inputText) {
@@ -36,19 +29,6 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                 } else {
                      setOutputText("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
                 }
-            } else if (toolId === 'dev-url-encoder') {
-                setOutputText(encodeURIComponent(inputText));
-            } else if (toolId === 'dev-url-decoder') {
-                setOutputText(decodeURIComponent(inputText));
-            } else if (toolId === 'dev-base64-encoder') {
-                setOutputText(btoa(inputText));
-            } else if (toolId === 'dev-base64-decoder') {
-                setOutputText(atob(inputText));
-            } else if (toolId === 'dev-jwt-decoder') {
-                const decoded = jwtDecode(inputText);
-                setOutputText(JSON.stringify(decoded, null, 2));
-            } else if (toolId === 'dev-beautify') {
-                setOutputText(beautify(inputText, { format: 'js' }));
             }
         } catch (e) {
             setOutputText(`Error: ${(e as Error).message}`);
@@ -65,10 +45,10 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                 )}
                 <input 
                     type="text" 
-                    value={inputText} 
-                    onChange={(e) => setInputText(e.target.value)}
-                    placeholder={toolId === 'dev-api' ? "https://api.example.com/v1/users" : "Enter text"}
-                    className={`flex-1 bg-gray-950 border border-gray-800 rounded p-3 text-white`}
+                    value={toolId === 'dev-api' ? inputText : undefined} 
+                    onChange={toolId === 'dev-api' ? (e) => setInputText(e.target.value) : undefined}
+                    placeholder={toolId === 'dev-api' ? "https://api.example.com/v1/users" : toolId === 'dev-ask' ? "Type 'uuid' or leave empty" : "Hidden"}
+                    className={`${toolId === 'dev-json' ? 'hidden' : 'block'} flex-1 bg-gray-950 border border-gray-800 rounded p-3 text-white`}
                 />
                  <button onClick={handleDevAction} className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 rounded font-medium text-white flex items-center gap-2">
                     {loading ? <RefreshCw className="animate-spin" size={18}/> : <Play size={18} />}
@@ -77,7 +57,18 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
-                <div className="flex flex-col col-span-2">
+                {toolId === 'dev-json' && (
+                    <div className="flex flex-col">
+                        <label className="text-gray-400 text-sm mb-2">Input JSON</label>
+                        <textarea 
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
+                            className="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-4 font-mono text-sm text-gray-300 focus:border-cyan-500/50 outline-none resize-none"
+                        />
+                    </div>
+                )}
+                
+                <div className={`flex flex-col ${toolId !== 'dev-json' ? 'col-span-2' : ''}`}>
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-gray-400 text-sm">Output</label>
                         <button onClick={() => {navigator.clipboard.writeText(outputText); notify("Copied!");}} className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">

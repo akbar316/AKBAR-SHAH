@@ -32,16 +32,12 @@ import {
   TrendingUp,
   FileSearch,
   LayoutTemplate,
-  CaseUpper,
-  Link,
-  Pipette,
-  LayoutGrid,
-  FileX,
-  Code,
-  ImagePlus,
-  FileImage,
-  Merge,
-  Shrink
+  Minimize2,
+  Images,
+  Pencil,
+  Stamp,
+  Mic,
+  BookCheck
 } from 'lucide-react';
 import { ToolCategory } from './types';
 
@@ -56,14 +52,10 @@ export const TOOLS_DATA: ToolCategory[] = [
     borderColor: 'border-blue-500/30',
     shadowColor: 'shadow-blue-500/20',
     subTools: [
-      { id: 'pdf-to-word', name: 'PDF to Word', icon: FileText },
-      { id: 'pdf-editor', name: 'PDF Editor', icon: PenTool },
-      { id: 'pdf-to-image', name: 'PDF to Image', icon: FileImage },
-      { id: 'image-to-pdf', name: 'Image to PDF', icon: ImageIcon },
-      { id: 'pdf-merge', name: 'Merge PDF', icon: Merge },
-      { id: 'pdf-compress', name: 'Compress PDF', icon: Shrink },
-      { id: 'pdf-split', name: 'Split', icon: Scissors },
-      { id: 'pdf-sign', name: 'Sign', icon: PenTool },
+      { id: 'pdf-convert', name: 'Convert', icon: RefreshCw },
+      { id: 'pdf-image', name: 'Image', icon: Images },
+      { id: 'pdf-compress', name: 'Compress', icon: Minimize2 },
+      { id: 'pdf-merge-split', name: 'Split & Merge', icon: Layers },
     ]
   },
   {
@@ -79,9 +71,7 @@ export const TOOLS_DATA: ToolCategory[] = [
       { id: 'text-extractor', name: 'Extractor', icon: Search },
       { id: 'text-counter', name: 'Counter', icon: Hash },
       { id: 'text-diff', name: 'Diff Check', icon: AlignLeft },
-      { id: 'text-case-converter', name: 'Case Converter', icon: CaseUpper },
-      { id: 'text-reverse', name: 'Reverse', icon: RefreshCw },
-      { id: 'text-slugify', name: 'Slugify', icon: Link },
+      { id: 'text-speech', name: 'Speech', icon: Mic },
     ]
   },
   {
@@ -97,12 +87,6 @@ export const TOOLS_DATA: ToolCategory[] = [
       { id: 'dev-json', name: 'JSON fmt', icon: Braces },
       { id: 'dev-api', name: 'API Test', icon: Terminal },
       { id: 'dev-ask', name: 'Generator', icon: MessageSquare },
-      { id: 'dev-url-encoder', name: 'URL Encoder', icon: Link },
-      { id: 'dev-url-decoder', name: 'URL Decoder', icon: Link },
-      { id: 'dev-base64-encoder', name: 'Base64 Encoder', icon: Code2 },
-      { id: 'dev-base64-decoder', name: 'Base64 Decoder', icon: Code2 },
-      { id: 'dev-jwt-decoder', name: 'JWT Decoder', icon: Lock },
-      { id: 'dev-beautify', name: 'Beautify', icon: Sparkles },
     ]
   },
   {
@@ -117,9 +101,9 @@ export const TOOLS_DATA: ToolCategory[] = [
     subTools: [
       { id: 'img-resize', name: 'Resizer', icon: Scaling },
       { id: 'img-crop', name: 'Cropper', icon: Crop },
+      { id: 'img-watermark', name: 'Watermark', icon: Stamp },
       { id: 'img-convert', name: 'Convert', icon: Layers },
       { id: 'img-filter', name: 'Filters', icon: Wand2 },
-      { id: 'img-color-picker', name: 'Color Picker', icon: Pipette },
     ]
   },
   {
@@ -135,6 +119,7 @@ export const TOOLS_DATA: ToolCategory[] = [
       { id: 'student-gpa', name: 'GPA Calc', icon: Calculator },
       { id: 'student-citation', name: 'Citation', icon: BookOpen },
       { id: 'student-plagiarism', name: 'Check', icon: Search },
+      { id: 'student-grammar', name: 'Grammar', icon: BookCheck },
     ]
   },
   {
@@ -182,10 +167,6 @@ export const TOOLS_DATA: ToolCategory[] = [
       { id: 'seo-content', name: 'Optimizer', icon: FileSearch },
       { id: 'seo-title', name: 'Headline', icon: Type },
       { id: 'seo-report', name: 'SEO Report', icon: TrendingUp },
-      { id: 'seo-sitemap', name: 'Sitemap', icon: LayoutGrid },
-      { id: 'seo-robots', name: 'Robots.txt', icon: FileX },
-      { id: 'seo-schema', name: 'Schema', icon: Code },
-      { id: 'seo-alt-text', name: 'Alt Text', icon: ImagePlus },
     ]
   }
 ];
