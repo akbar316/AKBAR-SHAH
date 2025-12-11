@@ -1,7 +1,7 @@
 
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Bot, User, Copy, RefreshCw, Cpu, Eraser, Aperture, Download, Code, Briefcase, FileText, Upload, Image as ImageIcon, Eye, CheckCircle } from 'lucide-react';
+import { Sparkles, Send, Bot, User, Copy, RefreshCw, Cpu, Eraser, Aperture, Download, Code, Briefcase, FileText, Upload, Image as ImageIcon, Eye, CheckCircle, Maximize, Minimize } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Fix for PDF.js worker
@@ -51,6 +51,7 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
     const [resumeStyle, setResumeStyle] = useState('ATS (Markdown)');
     const [resumePhoto, setResumePhoto] = useState<string | null>(null);
     const [resumeViewMode, setResumeViewMode] = useState<'preview' | 'code'>('preview');
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
     // Code Gen State
     const [codeInput, setCodeInput] = useState('');
@@ -716,9 +717,9 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
 
                     {/* Output */}
                     {(resumeOutput || loading) && (
-                        <div className="flex-1 bg-gray-950 border border-gray-800 rounded-xl overflow-hidden relative group min-h-[600px] flex flex-col shadow-2xl">
+                        <div className={`${isFullScreen ? 'fixed inset-0 z-50 m-0 rounded-none w-screen h-screen' : 'flex-1 min-h-[800px] rounded-xl border border-gray-800 shadow-2xl'} bg-gray-950 overflow-hidden relative group flex flex-col transition-all duration-300`}>
                             {/* Output Header */}
-                            <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900/50">
+                            <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm">
                                  <div className="flex items-center gap-2">
                                     <span className="text-xs text-gray-400 uppercase font-bold">Generated Output</span>
                                     {resumeStyle !== 'ATS (Markdown)' && (
@@ -737,6 +738,13 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                                             </button>
                                         </div>
                                     )}
+                                    <button 
+                                        onClick={() => setIsFullScreen(!isFullScreen)}
+                                        className="ml-2 p-1.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-colors"
+                                        title={isFullScreen ? "Exit Full Screen" : "Full Screen Preview"}
+                                    >
+                                        {isFullScreen ? <Minimize size={16}/> : <Maximize size={16}/>}
+                                    </button>
                                  </div>
                                  
                                  {resumeOutput && !loading && (
@@ -764,7 +772,7 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                                  )}
                             </div>
                             
-                            <div className="flex-1 relative bg-white">
+                            <div className="flex-1 relative bg-white overflow-auto">
                                 {loading ? (
                                     <div className="absolute inset-0 bg-gray-950 flex flex-col items-center justify-center gap-4">
                                         <RefreshCw className="animate-spin text-pink-500" size={32}/>
