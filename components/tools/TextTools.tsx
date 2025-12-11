@@ -1,7 +1,18 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SubTool } from '../../types';
-import { Mic, Volume2, StopCircle, Play, Copy, Trash2, Languages, Upload, Download, FileAudio, Save, FileText, AlertCircle, CheckCircle2, MoreVertical, X } from 'lucide-react';
+import { Mic, Volume2, StopCircle, Play, Copy, Trash2, Languages, Upload, Download, FileAudio, Save, FileText, AlertCircle, CheckCircle2, MoreVertical, X, CaseSensitive, Split, AlignJustify, ArrowRightLeft } from 'lucide-react';
+import * as Diff from 'diff';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Fix for PDF.js worker
+const pdfjs = (pdfjsLib as any).default || pdfjsLib;
+try {
+  if (pdfjs && !pdfjs.GlobalWorkerOptions.workerSrc) {
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+  }
+} catch (e) {
+  console.warn("Failed to set PDF worker source", e);
+}
 
 interface TextToolsProps {
   toolId: string;
@@ -11,6 +22,11 @@ export const TextTools: React.FC<TextToolsProps> = ({ toolId }) => {
   const [inputText, setInputText] = useState('');
   const [secondInput, setSecondInput] = useState('');
   const [outputText, setOutputText] = useState('');
+
+  // --- DIFF TOOL STATE ---
+  const [diffMode, setDiffMode] = useState<'chars' | 'words' | 'lines'>('words');
+  const [diffView, setDiffView] = useState<'inline' | 'split'>('split');
+  const [diffChanges, setDiffChanges] = useState<Diff.Change[]>([]);
 
   // --- SPEECH TOOL STATE ---
   const [speechMode, setSpeechMode] = useState<'tts' | 'stt'>('tts');
@@ -115,6 +131,67 @@ export const TextTools: React.FC<TextToolsProps> = ({ toolId }) => {
         stopRecording();
     };
   }, [toolId]);
+
+  // --- DIFF TOOL HANDLERS ---
+  useEffect(() => {
+    if (toolId !== 'text-diff') return;
+
+    // Calculate diff whenever inputs or mode changes
+    if (inputText || secondInput) {
+        let changes;
+        if (diffMode === 'chars') {
+            changes = Diff.diffChars(inputText, secondInput);
+        } else if (diffMode === 'lines') {
+            changes = Diff.diffLines(inputText, secondInput);
+        } else {
+            changes = Diff.diffWords(inputText, secondInput);
+        }
+        setDiffChanges(changes);
+    } else {
+        setDiffChanges([]);
+    }
+  }, [inputText, secondInput, diffMode, toolId]);
+
+  const handleDiffFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'A' | 'B') => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      let text = '';
+      if (file.type === 'application/pdf') {
+          // Use PDF.js
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjs.getDocument(arrayBuffer).promise;
+          for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const strings = content.items.map((item: any) => item.str);
+            text += strings.join(" ") + "\n";
+          }
+      } else {
+          // Text file
+          text = await file.text();
+      }
+
+      if (target === 'A') setInputText(text);
+      else setSecondInput(text);
+  };
+
+  const downloadDiffReport = () => {
+      if (diffChanges.length === 0) return;
+      
+      let report = `DIFF REPORT\nDate: ${new Date().toLocaleString()}\n\n`;
+      diffChanges.forEach(part => {
+          const prefix = part.added ? '[+] ' : part.removed ? '[-] ' : '    ';
+          report += `${prefix}${part.value}`;
+      });
+      
+      const blob = new Blob([report], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `diff-report-${Date.now()}.txt`;
+      a.click();
+  };
 
   // --- TTS HANDLERS ---
   const speakText = (text: string, onEnd?: () => void) => {
@@ -304,6 +381,175 @@ export const TextTools: React.FC<TextToolsProps> = ({ toolId }) => {
       a.download = `recording-${Date.now()}.${format}`; 
       a.click();
   };
+
+  // --- TEXT CASE CONVERTER HANDLERS ---
+  const handleCaseConvert = (mode: 'upper' | 'lower' | 'title' | 'sentence' | 'alternating' | 'inverse') => {
+      if (!inputText) return;
+      let res = '';
+      switch(mode) {
+          case 'upper': res = inputText.toUpperCase(); break;
+          case 'lower': res = inputText.toLowerCase(); break;
+          case 'sentence': 
+              res = inputText.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase()); 
+              break;
+          case 'title': 
+              // Simple title case implementation
+              res = inputText.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substr(1).toLowerCase()); 
+              break;
+          case 'inverse': 
+              res = inputText.split('').map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join(''); 
+              break;
+          case 'alternating': 
+              res = inputText.split('').map((c, i) => i % 2 === 0 ? c.toLowerCase() : c.toUpperCase()).join(''); 
+              break;
+      }
+      setOutputText(res);
+  };
+
+  // --- RENDER DIFF TOOL ---
+  if (toolId === 'text-diff') {
+      return (
+          <div className="flex flex-col h-full max-w-7xl mx-auto gap-6">
+              {/* Controls Header */}
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                  <div className="flex gap-2 bg-black/30 p-1 rounded-lg">
+                      <button 
+                          onClick={() => setDiffView('split')}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${diffView === 'split' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                      >
+                          <Split size={16}/> Split View
+                      </button>
+                      <button 
+                          onClick={() => setDiffView('inline')}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${diffView === 'inline' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                      >
+                          <AlignJustify size={16}/> Inline View
+                      </button>
+                  </div>
+
+                  <div className="flex gap-2">
+                      {['chars', 'words', 'lines'].map((mode) => (
+                          <button 
+                            key={mode}
+                            onClick={() => setDiffMode(mode as any)}
+                            className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all ${diffMode === mode ? 'bg-gray-800 text-cyan-400 border border-cyan-500/50' : 'bg-transparent text-gray-500 hover:text-gray-300 border border-gray-700'}`}
+                          >
+                              {mode}
+                          </button>
+                      ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                       <button onClick={() => {setInputText(''); setSecondInput('');}} className="p-2 text-red-400 hover:bg-red-900/20 rounded-lg transition-colors" title="Clear All">
+                           <Trash2 size={18}/>
+                       </button>
+                       <button onClick={downloadDiffReport} className="p-2 text-green-400 hover:bg-green-900/20 rounded-lg transition-colors" title="Download Report">
+                           <Download size={18}/>
+                       </button>
+                  </div>
+              </div>
+
+              {/* Input Area */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[400px]">
+                  <div className="flex flex-col h-full">
+                      <div className="flex justify-between items-center mb-2">
+                          <label className="text-sm font-bold text-gray-400 flex items-center gap-2">
+                              <FileText size={14} className="text-red-400"/> Original Text (A)
+                          </label>
+                          <label className="text-xs text-cyan-400 cursor-pointer hover:text-white flex items-center gap-1">
+                              <Upload size={12}/> Upload File
+                              <input type="file" onChange={(e) => handleDiffFileUpload(e, 'A')} className="hidden" accept=".txt,.js,.json,.md,.pdf"/>
+                          </label>
+                      </div>
+                      <textarea 
+                          value={inputText}
+                          onChange={(e) => setInputText(e.target.value)}
+                          className="flex-1 bg-gray-950/50 border border-gray-800 rounded-xl p-4 text-white resize-none outline-none focus:border-red-500/50 font-mono text-sm custom-scrollbar leading-relaxed"
+                          placeholder="Paste original text here..."
+                      />
+                  </div>
+                  
+                  <div className="flex flex-col h-full">
+                      <div className="flex justify-between items-center mb-2">
+                          <label className="text-sm font-bold text-gray-400 flex items-center gap-2">
+                              <FileText size={14} className="text-green-400"/> Modified Text (B)
+                          </label>
+                          <label className="text-xs text-cyan-400 cursor-pointer hover:text-white flex items-center gap-1">
+                              <Upload size={12}/> Upload File
+                              <input type="file" onChange={(e) => handleDiffFileUpload(e, 'B')} className="hidden" accept=".txt,.js,.json,.md,.pdf"/>
+                          </label>
+                      </div>
+                      <textarea 
+                          value={secondInput}
+                          onChange={(e) => setSecondInput(e.target.value)}
+                          className="flex-1 bg-gray-950/50 border border-gray-800 rounded-xl p-4 text-white resize-none outline-none focus:border-green-500/50 font-mono text-sm custom-scrollbar leading-relaxed"
+                          placeholder="Paste new text here..."
+                      />
+                  </div>
+              </div>
+
+              {/* Result Area */}
+              <div className="flex flex-col flex-1 min-h-[400px]">
+                  <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                      <ArrowRightLeft size={16} className="text-purple-400"/> Comparison Result
+                  </h4>
+                  
+                  <div className="flex-1 bg-[#0d1117] border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
+                      {diffChanges.length === 0 ? (
+                          <div className="h-full flex flex-col items-center justify-center text-gray-600">
+                              <Split size={48} className="opacity-20 mb-4"/>
+                              <p>Enter text in both fields to compare.</p>
+                          </div>
+                      ) : (
+                          <div className="h-full overflow-auto custom-scrollbar p-6 font-mono text-sm leading-6">
+                              
+                              {diffView === 'inline' ? (
+                                  <div className="whitespace-pre-wrap break-words">
+                                      {diffChanges.map((part, index) => {
+                                          if (part.added) {
+                                              return <span key={index} className="bg-green-900/40 text-green-300 px-0.5 rounded border-b border-green-500/30">{part.value}</span>;
+                                          } else if (part.removed) {
+                                              return <span key={index} className="bg-red-900/40 text-red-300 px-0.5 rounded line-through opacity-70 border-b border-red-500/30">{part.value}</span>;
+                                          } else {
+                                              return <span key={index} className="text-gray-400">{part.value}</span>;
+                                          }
+                                      })}
+                                  </div>
+                              ) : (
+                                  <div className="grid grid-cols-2 gap-8 h-full">
+                                      {/* Left: Original (Show Red/Removed) */}
+                                      <div className="border-r border-gray-800 pr-4 whitespace-pre-wrap break-words">
+                                          {diffChanges.map((part, index) => {
+                                              if (part.removed) {
+                                                  return <span key={index} className="bg-red-900/30 text-red-200">{part.value}</span>;
+                                              } else if (!part.added) {
+                                                  return <span key={index} className="text-gray-500">{part.value}</span>;
+                                              }
+                                              return null; // Don't show added text on original side
+                                          })}
+                                      </div>
+
+                                      {/* Right: Modified (Show Green/Added) */}
+                                      <div className="pl-4 whitespace-pre-wrap break-words">
+                                          {diffChanges.map((part, index) => {
+                                              if (part.added) {
+                                                  return <span key={index} className="bg-green-900/30 text-green-200">{part.value}</span>;
+                                              } else if (!part.removed) {
+                                                  return <span key={index} className="text-gray-300">{part.value}</span>;
+                                              }
+                                              return null; // Don't show removed text on new side
+                                          })}
+                                      </div>
+                                  </div>
+                              )}
+
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      );
+  }
 
   // --- RENDER SPEECH TOOL ---
   if (toolId === 'text-speech') {
@@ -541,6 +787,48 @@ export const TextTools: React.FC<TextToolsProps> = ({ toolId }) => {
       );
   }
 
+  // --- RENDER CASE CONVERTER ---
+  if (toolId === 'text-case') {
+      return (
+        <div className="flex flex-col h-full max-w-4xl mx-auto gap-6">
+            <div className="flex-1 flex flex-col h-1/2">
+                <div className="flex justify-between items-center mb-2">
+                     <label className="text-sm text-gray-400">Input Text</label>
+                     <button onClick={() => setInputText('')} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"><Trash2 size={12}/> Clear</button>
+                </div>
+                <textarea 
+                    value={inputText} 
+                    onChange={e => setInputText(e.target.value)} 
+                    className="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-4 text-white focus:border-cyan-500/50 outline-none resize-none font-mono text-sm"
+                    placeholder="Type or paste text here to convert case..." 
+                />
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                 <button onClick={() => handleCaseConvert('upper')} className="py-3 px-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-cyan-500 hover:bg-cyan-900/20 transition-all font-bold">UPPERCASE</button>
+                 <button onClick={() => handleCaseConvert('lower')} className="py-3 px-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-cyan-500 hover:bg-cyan-900/20 transition-all font-bold">lowercase</button>
+                 <button onClick={() => handleCaseConvert('title')} className="py-3 px-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-cyan-500 hover:bg-cyan-900/20 transition-all font-bold">Title Case</button>
+                 <button onClick={() => handleCaseConvert('sentence')} className="py-3 px-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-cyan-500 hover:bg-cyan-900/20 transition-all font-bold">Sentence case</button>
+                 <button onClick={() => handleCaseConvert('alternating')} className="py-3 px-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-cyan-500 hover:bg-cyan-900/20 transition-all font-bold">aLtErNaTiNg</button>
+                 <button onClick={() => handleCaseConvert('inverse')} className="py-3 px-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-cyan-500 hover:bg-cyan-900/20 transition-all font-bold">InVeRsE</button>
+            </div>
+
+            <div className="flex-1 flex flex-col h-1/2">
+                <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm text-gray-400">Result</label>
+                    <button onClick={() => navigator.clipboard.writeText(outputText)} className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"><Copy size={12}/> Copy</button>
+                </div>
+                <textarea 
+                    readOnly 
+                    value={outputText} 
+                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4 text-cyan-400 font-mono text-sm resize-none focus:outline-none"
+                    placeholder="Converted text will appear here..."
+                />
+            </div>
+        </div>
+      );
+  }
+
   // --- STANDARD TEXT TOOLS RENDER (Fallback) ---
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
@@ -554,27 +842,13 @@ export const TextTools: React.FC<TextToolsProps> = ({ toolId }) => {
             />
         </div>
         
-        {toolId === 'text-diff' ? (
-            <div className="flex flex-col h-full">
-                <label className="text-sm text-gray-400 mb-2">Comparison Text</label>
-                <textarea 
-                    value={secondInput}
-                    onChange={(e) => setSecondInput(e.target.value)}
-                    className="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-4 text-white focus:border-cyan-500/50 outline-none resize-none font-mono text-sm"
-                    placeholder="Paste second text here..."
-                />
-                 <div className="mt-4 p-4 bg-gray-900 rounded-xl border border-gray-800 text-cyan-400 font-mono text-sm">
-                    {outputText}
-                </div>
+        {/* Simple fallbacks for other toolIds if any match later */}
+        <div className="flex flex-col h-full">
+            <label className="text-sm text-gray-400 mb-2">Results</label>
+            <div className="flex-1 bg-gray-900 rounded-xl p-6 border border-gray-800">
+                <pre className="text-cyan-400 font-mono whitespace-pre-wrap">{outputText || 'Waiting for input...'}</pre>
             </div>
-        ) : (
-            <div className="flex flex-col h-full">
-                <label className="text-sm text-gray-400 mb-2">Results</label>
-                <div className="flex-1 bg-gray-900 rounded-xl p-6 border border-gray-800">
-                    <pre className="text-cyan-400 font-mono whitespace-pre-wrap">{outputText || 'Waiting for input...'}</pre>
-                </div>
-            </div>
-        )}
+        </div>
       </div>
   );
 };

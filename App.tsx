@@ -34,6 +34,11 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Scroll to top when activeToolId changes (Navigation)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeToolId]);
+
   // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,12 +56,9 @@ function App() {
       if (id) {
           const newUrl = `${window.location.pathname}?tool=${id}`;
           window.history.pushState({ tool: id }, '', newUrl);
-          // Scroll to top when opening a tool
-          window.scrollTo(0, 0);
       } else {
           const newUrl = window.location.pathname;
           window.history.pushState({}, '', newUrl);
-          window.scrollTo(0, 0);
       }
       // Clear search on selection
       setSearchQuery('');

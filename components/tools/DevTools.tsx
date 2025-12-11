@@ -1,6 +1,7 @@
 
+
 import React, { useState } from 'react';
-import { RefreshCw, Play, Copy, LayoutTemplate, Code, Eye, ExternalLink, Download, Wand2, Calculator, FormInput, Layout } from 'lucide-react';
+import { RefreshCw, Play, Copy, LayoutTemplate, Code, Eye, ExternalLink, Download, Wand2, Calculator, FormInput, Layout, FileCode, Check } from 'lucide-react';
 
 interface DevToolsProps {
   toolId: string;
@@ -14,6 +15,9 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
     
     // Web Builder State
     const [viewMode, setViewMode] = useState<'code' | 'preview'>('code');
+
+    // Code Formatter State
+    const [formatLanguage, setFormatLanguage] = useState('javascript');
 
     // Helper to safely get API Key
     const getApiKey = () => {
@@ -48,6 +52,39 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                      setOutputText(crypto.randomUUID());
                 } else {
                      setOutputText("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+                }
+            } else if (toolId === 'dev-format') {
+                if (!inputText.trim()) { notify("Please paste code to format."); return; }
+                const apiKey = getApiKey();
+                if (!apiKey) { notify("API Key Missing"); setOutputText("Error: VITE_OPENROUTER_API_KEY missing."); return; }
+                
+                setLoading(true);
+                try {
+                    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            "model": "amazon/nova-2-lite-v1:free",
+                            "messages": [
+                                { 
+                                    "role": "system", 
+                                    "content": `You are an expert Code Formatter and Linter.
+Task: Format the user's ${formatLanguage} code to be clean, readable, and follow standard style guides (indentation, spacing).
+If there are SYNTAX ERRORS, list them as comments at the very top of the output.
+Output ONLY the formatted code (no markdown blocks, no conversational text).`
+                                },
+                                { "role": "user", "content": inputText }
+                            ]
+                        })
+                    });
+                    const data = await response.json();
+                    const code = data.choices[0]?.message?.content || "Formatting failed.";
+                    setOutputText(code);
+                    notify("Code Formatted!");
+                } catch (e) {
+                    setOutputText(`Error: ${(e as Error).message}`);
+                } finally {
+                    setLoading(false);
                 }
             } else if (toolId === 'dev-web-builder') {
                 if (!inputText.trim()) { notify("Please describe your website."); return; }
@@ -174,7 +211,37 @@ RULES:
                     </div>
                 )}
 
-                {toolId !== 'dev-web-builder' && (
+                {/* --- Code Formatter Header --- */}
+                {toolId === 'dev-format' && (
+                    <div className="flex items-center gap-4 bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg">
+                        <FileCode className="text-cyan-400" size={24}/>
+                        <div className="flex-1">
+                            <label className="text-xs text-gray-400 uppercase font-bold block mb-1">Language</label>
+                            <select 
+                                value={formatLanguage} 
+                                onChange={(e) => setFormatLanguage(e.target.value)}
+                                className="bg-black/30 text-white border border-gray-700 rounded-lg py-2 px-3 text-sm focus:border-cyan-500 outline-none w-full md:w-48"
+                            >
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="json">JSON</option>
+                                <option value="python">Python</option>
+                                <option value="php">PHP</option>
+                            </select>
+                        </div>
+                        <button 
+                            onClick={handleDevAction} 
+                            disabled={loading || !inputText}
+                            className="bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg"
+                        >
+                            {loading ? <RefreshCw className="animate-spin" size={18}/> : <Check size={18} />}
+                            {loading ? 'Formatting...' : 'Format Code'}
+                        </button>
+                    </div>
+                )}
+
+                {!['dev-web-builder', 'dev-format'].includes(toolId) && (
                     <div className="flex gap-4">
                         {toolId === 'dev-api' && (
                             <select className="bg-gray-800 text-white p-3 rounded border border-gray-700">
@@ -199,13 +266,17 @@ RULES:
             {/* Main Workspace */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-[500px]">
                 {/* Standard Dev Tools Input */}
-                {toolId === 'dev-json' && (
-                    <div className="flex flex-col">
-                        <label className="text-gray-400 text-sm mb-2">Input JSON</label>
+                {(toolId === 'dev-json' || toolId === 'dev-format') && (
+                    <div className="flex flex-col h-full">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-gray-400 text-sm">{toolId === 'dev-format' ? 'Messy Code' : 'Input JSON'}</label>
+                            <button onClick={() => setInputText('')} className="text-xs text-red-400 hover:text-red-300">Clear</button>
+                        </div>
                         <textarea 
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
-                            className="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-4 font-mono text-sm text-gray-300 focus:border-cyan-500/50 outline-none resize-none"
+                            className="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-4 font-mono text-sm text-gray-300 focus:border-cyan-500/50 outline-none resize-none custom-scrollbar"
+                            placeholder={toolId === 'dev-format' ? "Paste your messy code here..." : "Paste JSON..."}
                         />
                     </div>
                 )}
@@ -288,15 +359,15 @@ RULES:
                     </div>
                 ) : (
                     /* Standard Output Area for other tools */
-                    <div className={`flex flex-col ${toolId !== 'dev-json' ? 'col-span-2' : ''}`}>
+                    <div className={`flex flex-col ${toolId !== 'dev-json' && toolId !== 'dev-format' ? 'col-span-2' : ''}`}>
                         <div className="flex justify-between items-center mb-2">
                             <label className="text-gray-400 text-sm">Output</label>
                             <button onClick={() => {navigator.clipboard.writeText(outputText); notify("Copied!");}} className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
                                 <Copy size={12} /> Copy
                             </button>
                         </div>
-                        <div className="flex-1 bg-[#0d1117] rounded-xl p-4 border border-gray-800 overflow-auto relative">
-                            <pre className="font-mono text-sm text-green-400">{outputText}</pre>
+                        <div className="flex-1 bg-[#0d1117] rounded-xl p-4 border border-gray-800 overflow-auto relative custom-scrollbar">
+                            <pre className="font-mono text-sm text-green-400 whitespace-pre-wrap">{outputText}</pre>
                             {!outputText && <span className="text-gray-600 italic">Run to see output...</span>}
                         </div>
                     </div>

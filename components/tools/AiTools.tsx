@@ -1,6 +1,18 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Bot, User, Copy, RefreshCw, Cpu, Eraser, Aperture, Download } from 'lucide-react';
+import { Sparkles, Send, Bot, User, Copy, RefreshCw, Cpu, Eraser, Aperture, Download, Code, Briefcase, FileText, Upload, Image as ImageIcon, Eye, CheckCircle } from 'lucide-react';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Fix for PDF.js worker
+const pdfjs = (pdfjsLib as any).default || pdfjsLib;
+try {
+  if (pdfjs && !pdfjs.GlobalWorkerOptions.workerSrc) {
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+  }
+} catch (e) {
+  console.warn("Failed to set PDF worker source", e);
+}
 
 interface AiToolsProps {
   toolId: string;
@@ -29,9 +41,22 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
     const [promptInput, setPromptInput] = useState('');
     const [promptOutput, setPromptOutput] = useState('');
 
-    // Logo Gen State
-    const [logoPrompt, setLogoPrompt] = useState('');
-    const [logoResults, setLogoResults] = useState<string[]>([]);
+    // Resume Writer State
+    const [resumeType, setResumeType] = useState('Resume');
+    const [resumeJob, setResumeJob] = useState('');
+    const [resumeLevel, setResumeLevel] = useState('Mid-Level');
+    const [resumeSkills, setResumeSkills] = useState('');
+    const [resumeBio, setResumeBio] = useState('');
+    const [resumeOutput, setResumeOutput] = useState('');
+    const [resumeStyle, setResumeStyle] = useState('ATS (Markdown)');
+    const [resumePhoto, setResumePhoto] = useState<string | null>(null);
+    const [resumeViewMode, setResumeViewMode] = useState<'preview' | 'code'>('preview');
+
+    // Code Gen State
+    const [codeInput, setCodeInput] = useState('');
+    const [codeOutput, setCodeOutput] = useState('');
+    const [codeLanguage, setCodeLanguage] = useState('javascript');
+    const [codeAction, setCodeAction] = useState('generate');
 
     // Auto-scroll chat
     useEffect(() => {
@@ -55,6 +80,28 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
             if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
         }
         return '';
+    };
+
+    // --- PDF Extraction Helper ---
+    const extractTextFromPdf = async (file: File): Promise<string> => {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjs.getDocument(arrayBuffer).promise;
+            let fullText = "";
+            const maxPages = Math.min(pdf.numPages, 5); // Limit pages
+            
+            for (let i = 1; i <= maxPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                const strings = content.items.map((item: any) => item.str);
+                fullText += strings.join(" ") + "\n";
+            }
+            
+            return fullText;
+        } catch (e) {
+            console.error(e);
+            throw new Error("PDF Extraction Failed");
+        }
     };
 
     // --- Core API Logic ---
@@ -136,6 +183,33 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
         }
     };
 
+    const handleGenerateCode = async () => {
+        if (!codeInput.trim() || loading) return;
+        setLoading(true);
+        setCodeOutput('');
+
+        try {
+            const instruction = codeAction === 'generate' 
+                ? `Generate ${codeLanguage} code for the following request. Provide only the code snippet, no markdown blocks unless necessary for structure.`
+                : codeAction === 'explain'
+                ? `Explain the following ${codeLanguage} code concisely.`
+                : `Find bugs and refactor the following ${codeLanguage} code. Explain the changes briefly.`;
+
+            const messages: ChatMessage[] = [
+                { role: 'system', content: `You are an expert AI Coding Assistant. Task: ${instruction}` },
+                { role: 'user', content: codeInput }
+            ];
+            
+            const result = await callOpenRouter(messages);
+            setCodeOutput(result);
+        } catch (error) {
+            notify("Code generation failed.");
+            setCodeOutput(`Error: ${(error as Error).message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handlePromptEnhance = async () => {
         if (!promptInput.trim() || loading) return;
         setLoading(true);
@@ -156,41 +230,91 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
         }
     };
 
-    const handleGenerateLogo = async () => {
-        if (!logoPrompt.trim() || loading) return;
+    // --- RESUME HANDLERS ---
+    const handleImportResume = async (file: File) => {
         setLoading(true);
-        setLogoResults([]);
-
-        // Using Pollinations AI for image generation (free, no key required for basic use)
-        // We generate 4 variants by using different random seeds
         try {
-            const encoded = encodeURIComponent(logoPrompt + " logo design, vector style, white background, high quality, minimalist");
-            const newImages = [];
-            for (let i = 0; i < 4; i++) {
-                const seed = Math.floor(Math.random() * 100000);
-                newImages.push(`https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`);
-            }
-            // Removed artificial delay (setTimeout) for faster response
-            setLogoResults(newImages);
-            setLoading(false);
+            const text = await extractTextFromPdf(file);
+            setResumeBio(text);
+            notify("Resume imported! Info filled.");
         } catch (e) {
-            notify("Generation failed");
+            notify("Import failed. Try a different PDF.");
+        } finally {
             setLoading(false);
         }
     };
 
-    const downloadImage = async (url: string, index: number) => {
+    const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => setResumePhoto(ev.target?.result as string);
+            reader.readAsDataURL(file);
+            notify("Photo uploaded!");
+        }
+    };
+
+    const handleGenerateResume = async () => {
+        if (!resumeJob.trim() || !resumeBio.trim() || loading) {
+            notify("Please fill in Job Title and Background Info.");
+            return;
+        }
+        setLoading(true);
+        setResumeOutput('');
+
+        const isHtmlMode = resumeStyle !== 'ATS (Markdown)';
+
         try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `logo-${index + 1}.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            let systemPrompt = `You are an expert Professional Resume Writer and Career Coach. 
+            Task: Write a high-quality ${resumeType} for a ${resumeJob} position.
+            Candidate Level: ${resumeLevel}.
+            Key Skills to Highlight: ${resumeSkills}.
+            Base the content strictly on the provided background info.`;
+
+            if (isHtmlMode) {
+                systemPrompt += `
+                OUTPUT FORMAT: Single-file HTML code using Tailwind CSS via CDN.
+                STYLE: ${resumeStyle}.
+                Layout Guidelines:
+                - Use <script src="https://cdn.tailwindcss.com"></script>.
+                - Make it responsive, modern, and professional.
+                - If the user has a photo, I will inject it later. For now, use the exact placeholder text: "[[PROFILE_PHOTO]]" in the src attribute of the img tag.
+                - Output ONLY the raw HTML code. Do NOT use markdown blocks (\`\`\`). Start with <!DOCTYPE html>.
+                `;
+            } else {
+                systemPrompt += `
+                OUTPUT FORMAT: Clean, ATS-friendly Markdown.
+                Structure:
+                - Summary
+                - Experience (Action-oriented bullet points)
+                - Skills
+                - Education
+                Tone: Professional, Confident.
+                `;
+            }
+
+            const messages: ChatMessage[] = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: `Here is my background info: ${resumeBio}` }
+            ];
+
+            let result = await callOpenRouter(messages);
+
+            // Clean up if AI adds markdown code blocks to HTML
+            if (isHtmlMode) {
+                result = result.replace(/```html/g, '').replace(/```/g, '').trim();
+                // Inject Photo
+                const photoSrc = resumePhoto || "https://via.placeholder.com/150?text=Photo";
+                result = result.replace('[[PROFILE_PHOTO]]', photoSrc);
+            }
+
+            setResumeOutput(result);
+            setResumeViewMode('preview'); // Auto show preview for HTML
         } catch (e) {
-            notify("Download failed. Try right-click > Save Image.");
+            notify("Generation failed.");
+            setResumeOutput(`Error: ${(e as Error).message}`);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -275,6 +399,89 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                             >
                                 <Send size={18}/>
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- CODE GENERATOR TOOL --- */}
+            {toolId === 'ai-code' && (
+                <div className="flex flex-col h-full min-h-[500px] gap-6">
+                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-xl">
+                        <div className="flex flex-col md:flex-row gap-4 mb-6">
+                            <div className="flex-1">
+                                <label className="text-xs text-gray-400 uppercase font-bold block mb-2">Language</label>
+                                <select 
+                                    value={codeLanguage} 
+                                    onChange={(e) => setCodeLanguage(e.target.value)}
+                                    className="w-full bg-black/30 text-white border border-gray-700 rounded-lg py-3 px-4 outline-none focus:border-pink-500"
+                                >
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="html">HTML</option>
+                                    <option value="css">CSS</option>
+                                    <option value="php">PHP</option>
+                                    <option value="sql">SQL</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                </select>
+                            </div>
+                            <div className="flex-1">
+                                <label className="text-xs text-gray-400 uppercase font-bold block mb-2">Action</label>
+                                <select 
+                                    value={codeAction} 
+                                    onChange={(e) => setCodeAction(e.target.value)}
+                                    className="w-full bg-black/30 text-white border border-gray-700 rounded-lg py-3 px-4 outline-none focus:border-pink-500"
+                                >
+                                    <option value="generate">Generate Code</option>
+                                    <option value="explain">Explain Code</option>
+                                    <option value="debug">Debug / Fix Code</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs text-gray-400 uppercase font-bold block mb-2">
+                                    {codeAction === 'generate' ? 'Describe functionality' : 'Paste Code here'}
+                                </label>
+                                <textarea 
+                                    value={codeInput}
+                                    onChange={(e) => setCodeInput(e.target.value)}
+                                    className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white outline-none focus:border-pink-500 resize-none h-32 font-mono text-sm"
+                                    placeholder={codeAction === 'generate' ? "e.g., Create a function to check if a number is prime..." : "Paste your code snippet..."}
+                                />
+                            </div>
+                            
+                            <button 
+                                onClick={handleGenerateCode} 
+                                disabled={loading || !codeInput}
+                                className="w-full bg-pink-600 hover:bg-pink-500 disabled:opacity-50 py-3 rounded-lg text-white font-bold shadow-lg hover:shadow-pink-900/20 transition-all flex items-center justify-center gap-2"
+                            >
+                                {loading ? <RefreshCw className="animate-spin" size={18}/> : <Code size={18}/>}
+                                {loading ? 'Processing...' : 'Run Assistant'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-6 overflow-hidden relative group">
+                        <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-800">
+                             <span className="text-xs text-gray-400 uppercase font-bold">Output</span>
+                             {codeOutput && (
+                                <button onClick={() => {navigator.clipboard.writeText(codeOutput); notify("Code copied!");}} className="text-xs text-pink-400 hover:text-white flex items-center gap-1">
+                                    <Copy size={12}/> Copy
+                                </button>
+                             )}
+                        </div>
+                        <div className="h-full overflow-auto custom-scrollbar pb-10">
+                            {codeOutput ? (
+                                <pre className="font-mono text-sm text-green-400 whitespace-pre-wrap">{codeOutput}</pre>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-gray-600 space-y-2">
+                                    <Code size={32} className="opacity-20"/>
+                                    <span className="text-sm italic">Generated code will appear here...</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -398,72 +605,196 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                 </div>
             )}
 
-            {/* --- LOGO GENERATOR TOOL --- */}
-            {toolId === 'ai-logo' && (
-                <div className="w-full max-w-4xl mx-auto bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-2xl">
-                     <div className="p-8 border-b border-gray-800 bg-gradient-to-r from-pink-900/10 to-transparent">
-                        <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                            <Aperture className="text-pink-400" />
-                            AI Logo Generator
-                        </h3>
-                        <p className="text-gray-400 text-sm">
-                            Generate unique, professional logo concepts instantly.
-                        </p>
-                    </div>
+            {/* --- RESUME WRITER TOOL --- */}
+            {toolId === 'ai-resume' && (
+                <div className="flex flex-col max-w-6xl mx-auto w-full gap-6">
+                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-xl">
+                        
+                        {/* Top Row: Type & Import */}
+                        <div className="flex flex-col lg:flex-row justify-between items-start gap-4 mb-6 border-b border-gray-800 pb-6">
+                             <div className="flex gap-4 w-full lg:w-auto">
+                                <div className="flex-1">
+                                    <label className="text-xs text-gray-400 uppercase font-bold block mb-2">Document</label>
+                                    <select 
+                                        value={resumeType} 
+                                        onChange={(e) => setResumeType(e.target.value)}
+                                        className="w-full bg-black/30 text-white border border-gray-700 rounded-lg py-2.5 px-3 outline-none focus:border-pink-500 text-sm"
+                                    >
+                                        <option>Resume</option>
+                                        <option>Cover Letter</option>
+                                    </select>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs text-gray-400 uppercase font-bold block mb-2">Style / Format</label>
+                                    <select 
+                                        value={resumeStyle} 
+                                        onChange={(e) => setResumeStyle(e.target.value)}
+                                        className="w-full bg-black/30 text-white border border-gray-700 rounded-lg py-2.5 px-3 outline-none focus:border-pink-500 text-sm"
+                                    >
+                                        <option>ATS (Markdown)</option>
+                                        <option>Modern (HTML)</option>
+                                        <option>Creative (HTML)</option>
+                                        <option>Professional (HTML)</option>
+                                    </select>
+                                </div>
+                             </div>
+                             
+                             <div className="flex gap-4 w-full lg:w-auto">
+                                <label className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-all cursor-pointer text-sm font-medium">
+                                    <Upload size={16}/> Import PDF
+                                    <input type="file" accept=".pdf" className="hidden" onChange={(e) => e.target.files && handleImportResume(e.target.files[0])} />
+                                </label>
+                                <label className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-all cursor-pointer text-sm font-medium">
+                                    <ImageIcon size={16}/> Photo
+                                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                                </label>
+                             </div>
+                        </div>
 
-                    <div className="p-8 space-y-8">
-                        <div>
-                            <label className="block text-sm text-gray-400 mb-2">Describe your Logo</label>
-                            <div className="flex gap-4">
+                        {/* Middle Row: Inputs */}
+                        <div className="flex flex-col lg:flex-row gap-4 mb-6">
+                            <div className="flex-1">
+                                <label className="text-xs text-gray-400 uppercase font-bold block mb-2">Target Role</label>
                                 <input 
-                                    type="text" 
-                                    value={logoPrompt}
-                                    onChange={(e) => setLogoPrompt(e.target.value)}
-                                    placeholder="e.g. Minimalist fox head, orange geometry" 
-                                    className="flex-1 bg-black/30 border border-gray-700 rounded-lg p-4 text-white focus:border-pink-500 outline-none"
-                                    onKeyDown={(e) => e.key === 'Enter' && handleGenerateLogo()}
+                                    type="text"
+                                    value={resumeJob}
+                                    onChange={(e) => setResumeJob(e.target.value)}
+                                    placeholder="e.g. Senior Frontend Engineer"
+                                    className="w-full bg-black/30 text-white border border-gray-700 rounded-lg py-3 px-4 outline-none focus:border-pink-500"
                                 />
-                                <button 
-                                    onClick={handleGenerateLogo}
-                                    disabled={loading || !logoPrompt}
-                                    className="bg-pink-600 hover:bg-pink-500 disabled:opacity-50 text-white px-8 rounded-lg font-bold transition-colors flex items-center gap-2"
+                            </div>
+                            <div className="flex-1">
+                                <label className="text-xs text-gray-400 uppercase font-bold block mb-2">Experience Level</label>
+                                <select 
+                                    value={resumeLevel} 
+                                    onChange={(e) => setResumeLevel(e.target.value)}
+                                    className="w-full bg-black/30 text-white border border-gray-700 rounded-lg py-3 px-4 outline-none focus:border-pink-500"
                                 >
-                                    {loading ? <RefreshCw size={20} className="animate-spin"/> : <Sparkles size={20}/>}
-                                    Generate
-                                </button>
+                                    <option>Entry-Level / Student</option>
+                                    <option>Mid-Level</option>
+                                    <option>Senior</option>
+                                    <option>Executive</option>
+                                </select>
                             </div>
                         </div>
 
-                        {logoResults.length > 0 && (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4">
-                                {logoResults.map((url, idx) => (
-                                    <div key={idx} className="group relative aspect-square bg-black rounded-xl overflow-hidden border border-gray-800 hover:border-pink-500 transition-all">
-                                        <img src={url} alt={`Logo Variation ${idx+1}`} className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-3 transition-opacity">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs text-gray-400 uppercase font-bold block mb-2">Key Skills (Comma Separated)</label>
+                                <input 
+                                    type="text"
+                                    value={resumeSkills}
+                                    onChange={(e) => setResumeSkills(e.target.value)}
+                                    placeholder="e.g. React, Node.js, Project Management, Agile..."
+                                    className="w-full bg-black/30 text-white border border-gray-700 rounded-lg py-3 px-4 outline-none focus:border-pink-500"
+                                />
+                            </div>
+                            <div className="relative">
+                                <div className="flex justify-between items-center mb-2">
+                                     <label className="text-xs text-gray-400 uppercase font-bold">Background Info / Old Resume Text</label>
+                                     {resumePhoto && <span className="text-xs text-green-400 flex items-center gap-1"><CheckCircle size={10}/> Photo Attached</span>}
+                                </div>
+                                <textarea 
+                                    value={resumeBio}
+                                    onChange={(e) => setResumeBio(e.target.value)}
+                                    className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white outline-none focus:border-pink-500 resize-none h-40 font-sans text-sm custom-scrollbar"
+                                    placeholder={loading ? "Extracting text from PDF..." : "Paste your old resume content, LinkedIn summary, or just type out your work history and education here..."}
+                                    disabled={loading}
+                                />
+                            </div>
+                            
+                            <button 
+                                onClick={handleGenerateResume} 
+                                disabled={loading || !resumeJob || !resumeBio}
+                                className="w-full bg-pink-600 hover:bg-pink-500 disabled:opacity-50 py-3 rounded-lg text-white font-bold shadow-lg hover:shadow-pink-900/20 transition-all flex items-center justify-center gap-2"
+                            >
+                                {loading ? <RefreshCw className="animate-spin" size={18}/> : <FileText size={18}/>}
+                                {loading ? 'Generating...' : `Generate ${resumeType}`}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Output */}
+                    {(resumeOutput || loading) && (
+                        <div className="flex-1 bg-gray-950 border border-gray-800 rounded-xl overflow-hidden relative group min-h-[600px] flex flex-col shadow-2xl">
+                            {/* Output Header */}
+                            <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900/50">
+                                 <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-400 uppercase font-bold">Generated Output</span>
+                                    {resumeStyle !== 'ATS (Markdown)' && (
+                                        <div className="flex bg-black/40 rounded-lg p-1 border border-gray-700 ml-4">
                                             <button 
-                                                onClick={() => downloadImage(url, idx)}
-                                                className="bg-pink-600 text-white p-2 rounded-full hover:bg-pink-500 transition-colors shadow-lg"
-                                                title="Download"
+                                                onClick={() => setResumeViewMode('preview')}
+                                                className={`px-3 py-1 rounded text-xs font-medium flex items-center gap-2 transition-all ${resumeViewMode === 'preview' ? 'bg-pink-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}
                                             >
-                                                <Download size={20} />
+                                                <Eye size={12}/> Preview
                                             </button>
-                                            <span className="text-xs font-bold text-white">Variation {idx + 1}</span>
+                                            <button 
+                                                onClick={() => setResumeViewMode('code')}
+                                                className={`px-3 py-1 rounded text-xs font-medium flex items-center gap-2 transition-all ${resumeViewMode === 'code' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                                            >
+                                                <Code size={12}/> HTML
+                                            </button>
+                                        </div>
+                                    )}
+                                 </div>
+                                 
+                                 {resumeOutput && !loading && (
+                                    <div className="flex gap-2">
+                                        {resumeStyle !== 'ATS (Markdown)' && (
+                                            <button 
+                                                onClick={() => {
+                                                    const blob = new Blob([resumeOutput], {type: 'text/html'});
+                                                    const url = URL.createObjectURL(blob);
+                                                    const a = document.createElement('a');
+                                                    a.href = url;
+                                                    a.download = 'resume.html';
+                                                    a.click();
+                                                    notify("Downloaded HTML");
+                                                }} 
+                                                className="text-xs text-gray-400 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700"
+                                            >
+                                                <Download size={12}/> Download HTML
+                                            </button>
+                                        )}
+                                        <button onClick={() => {navigator.clipboard.writeText(resumeOutput); notify("Copied to clipboard!");}} className="text-xs text-pink-400 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700">
+                                            <Copy size={12}/> Copy Text
+                                        </button>
+                                    </div>
+                                 )}
+                            </div>
+                            
+                            <div className="flex-1 relative bg-white">
+                                {loading ? (
+                                    <div className="absolute inset-0 bg-gray-950 flex flex-col items-center justify-center gap-4">
+                                        <RefreshCw className="animate-spin text-pink-500" size={32}/>
+                                        <div className="space-y-2 text-center">
+                                            <p className="text-gray-400 text-sm">Crafting your professional profile...</p>
+                                            <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden mx-auto">
+                                                <div className="h-full bg-pink-500 animate-pulse w-2/3"></div>
+                                            </div>
                                         </div>
                                     </div>
-                                ))}
+                                ) : (
+                                    <>
+                                        {resumeStyle === 'ATS (Markdown)' || resumeViewMode === 'code' ? (
+                                            <textarea 
+                                                readOnly 
+                                                value={resumeOutput}
+                                                className="w-full h-full p-8 bg-gray-950 text-gray-300 font-mono text-sm resize-none outline-none custom-scrollbar"
+                                            />
+                                        ) : (
+                                            <iframe 
+                                                srcDoc={resumeOutput}
+                                                title="Resume Preview"
+                                                className="w-full h-full border-none"
+                                            />
+                                        )}
+                                    </>
+                                )}
                             </div>
-                        )}
-                        
-                        {loading && logoResults.length === 0 && (
-                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {[...Array(4)].map((_, i) => (
-                                    <div key={i} className="aspect-square bg-gray-800 rounded-xl animate-pulse flex items-center justify-center">
-                                        <Aperture className="text-gray-700 opacity-50" size={32}/>
-                                    </div>
-                                ))}
-                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

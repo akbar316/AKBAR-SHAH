@@ -1,4 +1,5 @@
 
+
 import { 
   FileText, 
   Files, 
@@ -39,7 +40,14 @@ import {
   Stamp,
   Mic,
   BookCheck,
-  Aperture
+  Aperture,
+  StickyNote,
+  FileQuestion,
+  EyeOff,
+  CaseSensitive,
+  FileCode,
+  FileSpreadsheet,
+  Briefcase
 } from 'lucide-react';
 import { ToolCategory, SeoData } from './types';
 
@@ -54,7 +62,8 @@ export const TOOLS_DATA: ToolCategory[] = [
     borderColor: 'border-blue-500/30',
     shadowColor: 'shadow-blue-500/20',
     subTools: [
-      { id: 'pdf-convert', name: 'PDF Converter', icon: RefreshCw },
+      { id: 'pdf-summary', name: 'PDF Summarizer', icon: Sparkles },
+      { id: 'pdf-editable', name: 'PDF to Word/Excel', icon: FileText },
       { id: 'pdf-image', name: 'Image to PDF', icon: Images },
       { id: 'pdf-compress', name: 'Compress PDF', icon: Minimize2 },
       { id: 'pdf-merge-split', name: 'Split & Merge', icon: Layers },
@@ -74,6 +83,7 @@ export const TOOLS_DATA: ToolCategory[] = [
       { id: 'text-counter', name: 'Word Counter', icon: Hash },
       { id: 'text-diff', name: 'Diff Checker', icon: AlignLeft },
       { id: 'text-speech', name: 'Text to Speech', icon: Mic },
+      { id: 'text-case', name: 'Case Converter', icon: CaseSensitive },
     ]
   },
   {
@@ -87,6 +97,7 @@ export const TOOLS_DATA: ToolCategory[] = [
     shadowColor: 'shadow-emerald-500/10',
     subTools: [
       { id: 'dev-web-builder', name: 'AI Web Builder', icon: LayoutTemplate },
+      { id: 'dev-format', name: 'Code Beautifier', icon: FileCode },
       { id: 'dev-json', name: 'JSON Formatter', icon: Braces },
       { id: 'dev-api', name: 'API Tester', icon: Terminal },
       { id: 'dev-ask', name: 'Data Generator', icon: MessageSquare },
@@ -119,9 +130,10 @@ export const TOOLS_DATA: ToolCategory[] = [
     borderColor: 'border-orange-500/30',
     shadowColor: 'shadow-orange-500/20',
     subTools: [
-      { id: 'student-gpa', name: 'GPA Calculator', icon: Calculator },
-      { id: 'student-citation', name: 'Citation Gen', icon: BookOpen },
-      { id: 'student-plagiarism', name: 'Plagiarism Check', icon: Search },
+      { id: 'student-notes', name: 'Lecture Notes', icon: StickyNote },
+      { id: 'student-writer', name: 'Essay Writer', icon: PenTool },
+      { id: 'student-questions', name: 'Question Gen', icon: FileQuestion },
+      { id: 'student-paraphrase', name: 'Paraphraser', icon: RefreshCw },
       { id: 'student-grammar', name: 'Grammar Check', icon: BookCheck },
     ]
   },
@@ -135,9 +147,11 @@ export const TOOLS_DATA: ToolCategory[] = [
     borderColor: 'border-teal-500/30',
     shadowColor: 'shadow-teal-500/20',
     subTools: [
+      { id: 'util-calc', name: 'Calculators', icon: Calculator },
       { id: 'util-unit', name: 'Unit Converter', icon: RefreshCw },
       { id: 'util-password', name: 'Password Gen', icon: Lock },
       { id: 'util-qrcode', name: 'QR Generator', icon: QrCode },
+      { id: 'util-obfuscator', name: 'Text Scrambler', icon: EyeOff },
     ]
   },
   {
@@ -151,9 +165,10 @@ export const TOOLS_DATA: ToolCategory[] = [
     shadowColor: 'shadow-pink-500/20',
     subTools: [
       { id: 'ai-chat', name: 'AI Chat Bot', icon: MessageSquare },
+      { id: 'ai-code', name: 'Code Generator', icon: Code2 },
       { id: 'ai-summarizer', name: 'Text Summarizer', icon: Sparkles },
       { id: 'ai-prompt', name: 'Prompt Gen', icon: Cpu },
-      { id: 'ai-logo', name: 'Logo Generator', icon: Aperture },
+      { id: 'ai-resume', name: 'Resume Writer', icon: Briefcase },
     ]
   },
   {
@@ -177,6 +192,31 @@ export const TOOLS_DATA: ToolCategory[] = [
 
 export const SEO_DATA: Record<string, SeoData> = {
   // --- PDF TOOLS ---
+  'pdf-summary': {
+    title: 'AI PDF Summarizer - Summarize PDF Online Free',
+    description: 'Summarize long PDF documents instantly with AI. Convert PDFs to bullet points, notes, or key takeaways for free.',
+    h1: 'AI PDF Summarizer & Notes',
+    content: {
+      what: 'An intelligent document analysis tool that reads your PDF files and generates concise, easy-to-read summaries.',
+      why: 'Don\'t waste time reading 50-page reports. Get the key information, bullet points, and main ideas in seconds.',
+      how: [
+        'Upload your PDF document.',
+        'Click "Generate Summary".',
+        'Read the AI-generated key points.',
+        'Copy the summary to your notes.'
+      ],
+      features: [
+        'Instant AI Summarization.',
+        'Extracts Key Bullet Points.',
+        'Handles Long Documents.',
+        'Secure & Private.'
+      ],
+      faq: [
+        { q: 'Is it accurate?', a: 'Yes, it uses advanced AI models to understand and condense text effectively.' }
+      ]
+    },
+    relatedTools: ['pdf-editable', 'student-notes', 'ai-summarizer']
+  },
   'pdf-merge-split': {
     title: 'Merge PDF & Split PDF Online Free - Dicetools',
     description: 'Best free online tool to merge PDF files or split PDF pages. Fast, secure, and no installation required. Try the PDF Merger today.',
@@ -202,7 +242,7 @@ export const SEO_DATA: Record<string, SeoData> = {
         { q: 'Is it secure?', a: 'Yes, files are processed locally in your browser and never uploaded to a server.' }
       ]
     },
-    relatedTools: ['pdf-compress', 'pdf-convert', 'pdf-image']
+    relatedTools: ['pdf-compress', 'pdf-editable', 'pdf-image']
   },
   'pdf-compress': {
     title: 'PDF Compressor - Compress PDF Online Free',
@@ -227,7 +267,7 @@ export const SEO_DATA: Record<string, SeoData> = {
         { q: 'Does it affect quality?', a: 'Our intelligent algorithm maintains high visual quality while removing redundant data.' }
       ]
     },
-    relatedTools: ['pdf-merge-split', 'pdf-convert', 'img-resize']
+    relatedTools: ['pdf-merge-split', 'pdf-editable', 'img-resize']
   },
   'pdf-image': {
     title: 'Image to PDF Converter - JPG to PDF Online',
@@ -252,28 +292,29 @@ export const SEO_DATA: Record<string, SeoData> = {
         { q: 'Can I reorder images?', a: 'Yes, upload them in order or delete and re-add to organize.' }
       ]
     },
-    relatedTools: ['pdf-convert', 'img-resize', 'pdf-compress']
+    relatedTools: ['pdf-editable', 'img-resize', 'pdf-compress']
   },
-  'pdf-convert': {
-    title: 'PDF to Word Converter & PDF to Text - Free Online',
-    description: 'Convert PDF to Word (Text) or Images. Extract text from PDF files easily online. Fast and accurate PDF conversion tool.',
-    h1: 'PDF to Text & Image Converter',
+  'pdf-editable': {
+    title: 'PDF to Word, Excel & Text Converter - Free Online',
+    description: 'Convert PDF files to editable Word (.doc), Excel (.csv), or Text formats. Preserves content for easy editing.',
+    h1: 'PDF to Editable Converter',
     content: {
-      what: 'Convert your PDF documents into editable text files (.txt) or image formats (.jpg/.png). Great for extracting content from read-only files.',
-      why: 'Editing PDFs can be hard. Converting them to text allows you to use the content in Word or other editors easily.',
+      what: 'Transform your static PDF documents into editable formats like Microsoft Word, Excel, or plain Text.',
+      why: 'Need to edit a contract or analyze data from a report? Converting to an editable format saves you from retyping everything manually.',
       how: [
         'Upload the PDF file.',
-        'Select "To Text", "To JPG", or "To PNG".',
-        'Click "Download Processed File".'
+        'Select output format: Word, Excel, or Text.',
+        'Click "Convert to Editable".',
+        'Download your file instantly.'
       ],
       features: [
-        'Extracts raw text accurately.',
-        'High-resolution image rendering.',
-        'Browser-based security.',
-        'Simple interface.'
+        'Converts to Word (.doc) layout.',
+        'Extracts tables to Excel (.csv).',
+        'Secure client-side processing.',
+        'No file size limits.'
       ],
       faq: [
-        { q: 'Does it keep formatting?', a: 'The "To Text" mode extracts raw text. For layout preservation, use "To Image".' }
+        { q: 'Is it accurate?', a: 'It extracts text and layout structures efficiently, though complex styling may vary slightly.' }
       ]
     },
     relatedTools: ['pdf-merge-split', 'text-extractor', 'pdf-image']
@@ -355,6 +396,30 @@ export const SEO_DATA: Record<string, SeoData> = {
     },
     relatedTools: ['text-diff', 'text-speech', 'student-grammar']
   },
+  'text-case': {
+    title: 'Text Case Converter - Uppercase, Lowercase & Title Case',
+    description: 'Easily convert text between Uppercase, Lowercase, Title Case, Sentence Case, and more. Free online text formatting tool.',
+    h1: 'Text Case Converter',
+    content: {
+      what: 'A versatile text utility to instantly change the capitalization of your text. Convert whole paragraphs to uppercase, lowercase, or format headlines.',
+      why: 'Left your caps lock on? Need to format a title properly? This tool fixes capitalization issues in seconds.',
+      how: [
+        'Paste your text.',
+        'Click the button for your desired format (e.g., UPPERCASE, Title Case).',
+        'Copy the formatted text.'
+      ],
+      features: [
+        'Sentence case logic.',
+        'Title Case formatting.',
+        'Alternating & Inverse case modes.',
+        'Instant conversion.'
+      ],
+      faq: [
+        { q: 'Does it handle punctuation?', a: 'Yes, Sentence Case respects punctuation marks like periods and question marks.' }
+      ]
+    },
+    relatedTools: ['text-counter', 'text-speech', 'seo-title']
+  },
   'text-speech': {
     title: 'Text to Speech & Speech to Text Online',
     description: 'Convert text to voice (TTS) and voice to text (STT) online. Free AI speech converter and transcription tool.',
@@ -382,6 +447,56 @@ export const SEO_DATA: Record<string, SeoData> = {
   },
 
   // --- STUDENT TOOLS ---
+  'student-notes': {
+    title: 'Lecture Notes Summarizer & PDF to Study Guide',
+    description: 'Upload lecture notes or PDFs to create bullet points, study guides, and Q&A automatically. Best AI study assistant.',
+    h1: 'Lecture Notes & PDF Summarizer',
+    content: {
+      what: 'A powerful study companion that digests long lecture notes, chapters, or PDF slides and converts them into organized study materials.',
+      why: 'Reading 50 pages of notes is hard. This tool extracts the key information instantly, creating concise bullet points or practice questions to help you study smarter.',
+      how: [
+        'Upload your PDF lecture notes or paste text.',
+        'Select output mode (Bullet Points, Study Guide, Q&A).',
+        'Click "Generate Notes".',
+        'Review and copy your study material.'
+      ],
+      features: [
+        'Supports PDF Uploads.',
+        'Generates Practice Q&A.',
+        'Creates Structured Study Guides.',
+        'Extracts Key Concepts.'
+      ],
+      faq: [
+        { q: 'Can it read scanned PDFs?', a: 'It works best with text-based PDFs. Scanned images may not be read accurately.' }
+      ]
+    },
+    relatedTools: ['student-writer', 'ai-summarizer', 'student-paraphrase']
+  },
+  'student-writer': {
+    title: 'Free AI Essay Writer & Assignment Generator',
+    description: 'Generate essays, assignments, reports, and summaries instantly with AI. Best free online writing assistant for students.',
+    h1: 'AI Essay & Assignment Writer',
+    content: {
+      what: 'An intelligent AI writing tool that helps students generate high-quality essays, assignments, reports, and summaries on any topic.',
+      why: 'Overcome writer\'s block and save time. Whether you need a 5-paragraph essay or a research report structure, this tool creates a solid draft instantly.',
+      how: [
+        'Select the type of content (Essay, Report, etc.).',
+        'Enter your topic or prompt.',
+        'Choose the desired tone and length.',
+        'Click "Generate Content" to get your draft.'
+      ],
+      features: [
+        'Generates Essays, Reports, & Summaries.',
+        'Adjustable Academic Tones.',
+        'Structured outputs with headers.',
+        'Instant draft generation.'
+      ],
+      faq: [
+        { q: 'Is it plagiarism-free?', a: 'The AI generates unique content, but you should always review and cite sources properly.' }
+      ]
+    },
+    relatedTools: ['student-grammar', 'student-questions', 'student-paraphrase']
+  },
   'student-grammar': {
     title: 'Grammar Checker Online Free - Correct Grammar & Spelling',
     description: 'Free AI grammar checker and spell checker. Fix grammar mistakes, punctuation, and improve writing style instantly.',
@@ -405,60 +520,109 @@ export const SEO_DATA: Record<string, SeoData> = {
         { q: 'How does it work?', a: 'It uses advanced language models to understand context and suggest corrections.' }
       ]
     },
-    relatedTools: ['student-plagiarism', 'student-citation', 'text-counter']
+    relatedTools: ['student-paraphrase', 'student-questions', 'text-counter']
   },
-  'student-plagiarism': {
-    title: 'Plagiarism Checker Free - Check Originality Online',
-    description: 'Free plagiarism checker for students and writers. Check text for duplicate content and uniqueness score online.',
-    h1: 'Free Plagiarism Checker',
+  'student-paraphrase': {
+    title: 'Free Paraphrasing Tool - Rewrite Text & Remove Plagiarism',
+    description: 'Best free AI paraphrasing tool. Rewrite essays, articles, and text to avoid plagiarism and improve clarity. Multiple modes available.',
+    h1: 'AI Paraphrasing Tool',
     content: {
-      what: 'A tool to scan your text against common patterns to estimate its originality and uniqueness.',
-      why: 'Avoid academic penalties and ensure your content is unique for SEO ranking.',
+      what: 'A smart rewriting tool that rephrases your text to make it unique, clear, and engaging while keeping the original meaning.',
+      why: 'Avoid accidental plagiarism in academic papers or refresh old content for SEO. It helps you find new ways to express ideas.',
       how: [
-        'Paste your essay or article.',
-        'Click "Check".',
-        'Wait for the scan to complete.',
-        'Review the uniqueness score.'
+        'Paste your text into the input box.',
+        'Select a mode (Standard, Formal, Academic, etc.).',
+        'Click "Paraphrase".',
+        'Copy the unique, rewritten text.'
       ],
       features: [
-        'Percentage based scoring.',
-        'Readability analysis.',
-        'Fast scanning.',
-        'No sign-up required.'
+        'Removes plagiarism.',
+        'Improves sentence structure.',
+        'Academic & Formal modes.',
+        'Maintains original meaning.'
       ],
       faq: [
-        { q: 'Is it 100% accurate?', a: 'It provides an estimate based on pattern matching. For critical academic work, use university-provided tools.' }
+        { q: 'Is it free?', a: 'Yes, our paraphraser is free to use.' }
       ]
     },
-    relatedTools: ['student-grammar', 'student-citation', 'student-gpa']
+    relatedTools: ['student-grammar', 'student-writer', 'text-counter']
   },
-  'student-citation': {
-    title: 'Citation Generator - APA, MLA, Chicago Format',
-    description: 'Free citation machine. Generate APA, MLA, Chicago, and Harvard citations for websites and books instantly.',
-    h1: 'Free Citation Generator',
+  'student-questions': {
+    title: 'AI Question Generator - Create MCQs & Short Questions',
+    description: 'Generate practice questions, MCQs, and quizzes from any text or chapter. Perfect for students and teachers to create exams instantly.',
+    h1: 'AI Question & Quiz Generator',
     content: {
-      what: 'Create properly formatted bibliographic references for your papers in APA, MLA, Chicago, or Harvard styles.',
-      why: 'Citing sources correctly is mandatory for academic integrity but hard to memorize. This tool automates it.',
+      what: 'A powerful educational tool that converts your textbook chapters, notes, or articles into practice exams. It generates Multiple Choice Questions (MCQs), Short Answer, and Long Answer questions with answer keys.',
+      why: 'Studying for an exam? Test your knowledge by generating a quiz from your notes. Teachers can also use it to quickly create test papers.',
       how: [
-        'Select Citation Style (e.g., APA).',
-        'Choose Source Type (Website/Book).',
-        'Enter details (Author, Title, Year).',
-        'Click Generate to copy.'
+        'Paste your text or upload a PDF chapter.',
+        'Select Question Type (MCQ, Short, Long).',
+        'Choose Difficulty and Quantity.',
+        'Click "Generate Questions".'
       ],
       features: [
-        'Supports 4 major styles.',
-        'Instant formatting.',
-        'One-click copy.',
-        'Clean interface.'
+        'Generates MCQs with Options.',
+        'Includes Answer Keys.',
+        'Supports Long & Short formats.',
+        'Reads from PDF or Text.'
       ],
       faq: [
-        { q: 'Is this current?', a: 'Yes, we update formats to match the latest style guides.' }
+        { q: 'Are the answers accurate?', a: 'The AI generates answers based strictly on the provided text to ensure accuracy.' }
       ]
     },
-    relatedTools: ['student-gpa', 'student-grammar', 'student-plagiarism']
+    relatedTools: ['util-calc', 'student-grammar', 'student-paraphrase']
   },
 
   // --- AI TOOLS ---
+  'ai-chat': {
+    title: 'AI Chat Bot - Free Online AI Assistant',
+    description: 'Chat with an intelligent AI assistant. Get answers to questions, write content, and solve problems instantly.',
+    h1: 'AI Chat Assistant',
+    content: {
+      what: 'A versatile AI chatbot designed to help you with a wide range of tasks, from general knowledge to creative writing.',
+      why: 'Access a smart assistant 24/7 to boost your productivity and get instant answers.',
+      how: [
+        'Type your message in the chat box.',
+        'Receive an instant, helpful response.',
+        'Continue the conversation.'
+      ],
+      features: [
+        'Natural conversation.',
+        'General knowledge.',
+        'Creative writing helper.',
+        'Problem solving.'
+      ],
+      faq: [
+        { q: 'Is it free?', a: 'Yes, this tool is free to use.' }
+      ]
+    },
+    relatedTools: ['ai-summarizer', 'ai-code', 'ai-prompt']
+  },
+  'ai-code': {
+    title: 'AI Code Generator & Assistant - Write Code Instantly',
+    description: 'Free AI code generator. Generate Python, JavaScript, PHP, HTML, and CSS code from text descriptions. Debug and explain code.',
+    h1: 'AI Code Generator',
+    content: {
+      what: 'An intelligent coding assistant that converts natural language requests into clean, functional code snippets in various programming languages.',
+      why: 'Speed up development by generating boilerplate code, solving algorithms, or understanding complex functions instantly.',
+      how: [
+        'Select your programming language.',
+        'Describe what you want the code to do (or paste code to explain).',
+        'Click "Generate".',
+        'Copy the result to your IDE.'
+      ],
+      features: [
+        'Supports JS, Python, PHP, HTML, CSS.',
+        'Explains complex logic.',
+        'Refactors and optimizes code.',
+        'Instant syntax generation.'
+      ],
+      faq: [
+        { q: 'Is the code bug-free?', a: 'While highly accurate, always review and test generated code before using it in production.' }
+      ]
+    },
+    relatedTools: ['dev-format', 'dev-web-builder', 'dev-json']
+  },
   'ai-summarizer': {
     title: 'Text Summarizer - Summarize Articles Online',
     description: 'Free AI text summarizer. Condense long articles, essays, and text into short summaries instantly.',
@@ -483,30 +647,54 @@ export const SEO_DATA: Record<string, SeoData> = {
     },
     relatedTools: ['ai-chat', 'text-speech', 'text-counter']
   },
-  'ai-logo': {
-    title: 'Free AI Logo Generator - Create Logos Online',
-    description: 'Generate professional logos instantly with AI. Create unique brand identities from text prompts for free.',
-    h1: 'AI Logo Generator',
+  'ai-resume': {
+    title: 'Free AI Resume & Cover Letter Writer',
+    description: 'Generate professional resumes and cover letters instantly. Customizable for any job role and experience level.',
+    h1: 'AI Resume & Cover Letter Builder',
     content: {
-      what: 'A powerful AI tool that generates unique logo concepts based on your text description. It creates multiple variations instantly.',
-      why: 'Starting a new business or project? get professional logo ideas in seconds without hiring a designer.',
+      what: 'A smart career tool that writes professional, ATS-friendly resumes and cover letters tailored to your specific job targets.',
+      why: 'Writing a resume from scratch is difficult. This tool helps you articulate your skills and experience professionally in seconds.',
       how: [
-        'Describe your logo idea (e.g., "Minimalist coffee shop logo").',
-        'Click "Generate Logos".',
-        'View 4 unique variations.',
-        'Download your favorite design.'
+        'Select "Resume" or "Cover Letter".',
+        'Enter your Job Title and Experience.',
+        'List your key skills and background.',
+        'Click "Generate" to get a formatted draft.'
       ],
       features: [
-        '4 instant variations.',
-        'High-quality generation.',
-        'No watermark.',
-        'Unlimited attempts.'
+        'Professional & Academic formats.',
+        'Customizable skills section.',
+        'ATS-friendly structure.',
+        'Instant generation.'
       ],
       faq: [
-        { q: 'Is it free?', a: 'Yes, you can generate and download logos for free.' }
+        { q: 'Is it free?', a: 'Yes, you can generate unlimited drafts.' }
       ]
     },
-    relatedTools: ['ai-prompt', 'img-resize', 'img-convert']
+    relatedTools: ['ai-chat', 'student-writer', 'text-counter']
+  },
+  'ai-prompt': {
+    title: 'AI Prompt Generator - Improve Midjourney Prompts',
+    description: 'Enhance your AI art prompts. Generate detailed, descriptive prompts for Midjourney, DALL-E, and Stable Diffusion.',
+    h1: 'AI Prompt Engineer',
+    content: {
+      what: 'A tool to expand basic ideas into detailed, professional prompts for AI image generators.',
+      why: 'Better prompts yield better images. This tool adds lighting, style, and texture details automatically.',
+      how: [
+        'Enter a basic idea (e.g., "A cat").',
+        'Click "Enhance".',
+        'Copy the detailed prompt.'
+      ],
+      features: [
+        'Adds stylistic details.',
+        'Optimizes for Midjourney/DALL-E.',
+        'Instant expansion.',
+        'Professional vocabulary.'
+      ],
+      faq: [
+        { q: 'Does it generate images?', a: 'No, it generates text prompts for you to use in image generators.' }
+      ]
+    },
+    relatedTools: ['ai-resume', 'ai-chat', 'dev-web-builder']
   },
 
   // --- DEV TOOLS ---
@@ -535,6 +723,31 @@ export const SEO_DATA: Record<string, SeoData> = {
     },
     relatedTools: ['dev-json', 'seo-meta', 'ai-chat']
   },
+  'dev-format': {
+    title: 'Code Beautifier & Formatter - HTML, CSS, JS, Python',
+    description: 'Free online code formatter. Beautify and format HTML, CSS, JavaScript, Python, PHP, and JSON. Highlights syntax errors instantly.',
+    h1: 'Code Beautifier & Formatter',
+    content: {
+      what: 'A powerful multi-language code formatter that cleans up messy code, fixes indentation, and highlights syntax errors using AI.',
+      why: 'Readable code is essential for debugging and maintenance. Don\'t waste time manually fixing indentation.',
+      how: [
+        'Select your programming language.',
+        'Paste the messy code.',
+        'Click "Format Code".',
+        'Copy the beautified result.'
+      ],
+      features: [
+        'Supports HTML, CSS, JS, Python, PHP, JSON.',
+        'AI-powered syntax checking.',
+        'Fixes indentation & spacing.',
+        'Instant processing.'
+      ],
+      faq: [
+        { q: 'Does it fix logic errors?', a: 'It primarily fixes formatting and syntax errors, not complex logical bugs.' }
+      ]
+    },
+    relatedTools: ['dev-json', 'dev-web-builder', 'text-diff']
+  },
   'dev-json': {
     title: 'JSON Formatter & Validator - Prettify JSON Online',
     description: 'Format, validate, and beautify JSON data instantly. Best free online JSON formatter for developers.',
@@ -560,29 +773,101 @@ export const SEO_DATA: Record<string, SeoData> = {
     },
     relatedTools: ['dev-api', 'text-diff', 'util-qrcode']
   },
-  'student-gpa': {
-    title: 'College GPA Calculator - Calculate Grade Point Average',
-    description: 'Free college GPA calculator. Enter your courses, credits, and grades to calculate your semester and cumulative GPA instantly.',
-    h1: 'Advanced GPA Calculator',
+  'dev-api': {
+    title: 'API Tester Online - Mock API Requests',
+    description: 'Free online API tester. Simulate GET, POST, PUT requests and view responses. Useful for testing endpoints quickly.',
+    h1: 'Online API Tester',
     content: {
-      what: 'A calculator designed to help high school and college students track their academic performance by computing their Grade Point Average (GPA).',
-      why: 'Knowing your GPA is crucial for scholarships, university applications, and academic probation tracking.',
+      what: 'A simple utility to test API endpoints or generate mock JSON responses for prototyping.',
+      why: 'Quickly verify if an API endpoint is reachable or simulate a response structure before building the backend.',
       how: [
-        'Click "Add Course" for each class you are taking.',
-        'Enter the course name (optional).',
-        'Select the grade (A, B, C...) and credit hours.',
-        'Your GPA updates instantly in the header.'
+        'Select HTTP Method (GET, POST, etc).',
+        'Enter URL.',
+        'Click Run to see the response.'
       ],
       features: [
-        'Supports weighted grades (A+, A-).',
-        'Dynamic course list.',
-        'Instant calculation.',
-        'Clean, dark-mode interface.'
+        'Supports common HTTP methods.',
+        'JSON response preview.',
+        'Fast lightweight interface.',
+        'History of requests.'
       ],
       faq: [
-        { q: 'What is a 4.0 scale?', a: 'It is the standard grading scale where an A equals 4 points, B equals 3, etc.' }
+        { q: 'Can I send headers?', a: 'Currently supports basic requests. Advanced headers coming soon.' }
       ]
     },
-    relatedTools: ['student-citation', 'student-grammar', 'student-plagiarism']
-  }
+    relatedTools: ['dev-json', 'dev-web-builder']
+  },
+  'dev-ask': {
+    title: 'Mock Data Generator - Generate Random Data',
+    description: 'Generate random user data, UUIDs, and lorem ipsum text for testing. Free developer data tool.',
+    h1: 'Random Data Generator',
+    content: {
+      what: 'Generate placeholder data for your applications. Create UUIDs, random strings, or lorem ipsum text instantly.',
+      why: 'Developers often need dummy data to test databases or UI layouts. This tool provides it instantly.',
+      how: [
+        'Type "uuid" for a unique ID.',
+        'Leave empty for Lorem Ipsum text.',
+        'Click Run.'
+      ],
+      features: [
+        'UUID v4 generation.',
+        'Lorem Ipsum text.',
+        'Instant results.',
+        'One-click copy.'
+      ],
+      faq: [
+        { q: 'Is it random?', a: 'Yes, it uses cryptographically strong random values where applicable.' }
+      ]
+    },
+    relatedTools: ['dev-json', 'util-password']
+  },
+  'util-calc': {
+    title: 'Free Online Calculators - GPA, BMI, Loan & Scientific',
+    description: 'All-in-one calculator suite. Includes Scientific Calculator, College GPA Calculator, BMI Health Calculator, and Loan/Mortgage Payment Calculator.',
+    h1: 'Advanced Online Calculators',
+    content: {
+      what: 'A complete suite of essential calculators for students, homeowners, and health-conscious individuals.',
+      why: 'Why visit different websites? Get precise calculations for your grades, finance, and health in one secure place.',
+      how: [
+        'Select the Calculator Mode (Scientific, GPA, BMI, Loan).',
+        'Enter your values (e.g., Course Grades, Loan Amount).',
+        'View results instantly.'
+      ],
+      features: [
+        'Standard & Scientific Math.',
+        'Cumulative GPA tracking.',
+        'Monthly Mortgage Payments.',
+        'BMI Health Categories.'
+      ],
+      faq: [
+        { q: 'Is the loan calculator accurate?', a: 'It uses the standard amortization formula used by most banks.' }
+      ]
+    },
+    relatedTools: ['student-questions', 'util-unit', 'text-counter']
+  },
+  'util-obfuscator': {
+    title: 'Text Obfuscator & Scrambler - Hide Text Online',
+    description: 'Scramble text to make it unreadable and restore it easily. Simple reversible text obfuscation tool.',
+    h1: 'Text Obfuscator & Scrambler',
+    content: {
+      what: 'A utility to obfuscate or scramble text so it becomes unreadable to the human eye, with the ability to reverse the process.',
+      why: 'Useful for hiding spoilers, temporarily obscuring sensitive info in shared snippets, or just for fun puzzles.',
+      how: [
+        'Enter your text.',
+        'Click "Obfuscate" to scramble it.',
+        'Copy the result.',
+        'To restore, paste the scrambled text and click "Unscramble".'
+      ],
+      features: [
+        'Reversible scrambling.',
+        'Base64 + Reversal algorithm.',
+        'Instant client-side processing.',
+        'No data storage.'
+      ],
+      faq: [
+        { q: 'Is this secure encryption?', a: 'No, this is simple obfuscation (encoding). Do not use for highly sensitive passwords.' }
+      ]
+    },
+    relatedTools: ['util-password', 'text-counter', 'dev-json']
+  },
 };

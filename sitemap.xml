@@ -10,7 +10,7 @@
 
   <!-- PDF Tools -->
   <url>
-    <loc>https://dicetools.online/?tool=pdf-convert</loc>
+    <loc>https://dicetools.online/?tool=pdf-editable</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -26,6 +26,11 @@
   </url>
   <url>
     <loc>https://dicetools.online/?tool=pdf-merge-split</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/?tool=pdf-summary</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -78,8 +83,23 @@
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://dicetools.online/?tool=text-case</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
 
   <!-- Dev Tools -->
+  <url>
+    <loc>https://dicetools.online/?tool=dev-web-builder</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/?tool=dev-format</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <url>
     <loc>https://dicetools.online/?tool=dev-json</loc>
     <changefreq>weekly</changefreq>
@@ -103,12 +123,22 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://dicetools.online/?tool=ai-code</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://dicetools.online/?tool=ai-summarizer</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://dicetools.online/?tool=ai-prompt</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/?tool=ai-resume</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -142,17 +172,17 @@
 
   <!-- Student Tools -->
   <url>
-    <loc>https://dicetools.online/?tool=student-gpa</loc>
+    <loc>https://dicetools.online/?tool=student-notes</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://dicetools.online/?tool=student-citation</loc>
+    <loc>https://dicetools.online/?tool=student-questions</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://dicetools.online/?tool=student-plagiarism</loc>
+    <loc>https://dicetools.online/?tool=student-paraphrase</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -161,8 +191,18 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://dicetools.online/?tool=student-writer</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
   
   <!-- Utilities -->
+  <url>
+    <loc>https://dicetools.online/?tool=util-calc</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <url>
     <loc>https://dicetools.online/?tool=util-unit</loc>
     <changefreq>monthly</changefreq>
@@ -175,6 +215,11 @@
   </url>
   <url>
     <loc>https://dicetools.online/?tool=util-qrcode</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/?tool=util-obfuscator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

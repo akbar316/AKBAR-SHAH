@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Code, FileText, Type, BarChart3, RefreshCw, Sparkles, BrainCircuit, Copy } from 'lucide-react';
+import { Search, Code, FileText, Type, BarChart3, RefreshCw, Sparkles, BrainCircuit, Copy, Tag, Target } from 'lucide-react';
 import { SubTool } from '../../types';
 
 interface SeoToolsProps {
@@ -10,7 +10,18 @@ interface SeoToolsProps {
 }
 
 export const SeoTools: React.FC<SeoToolsProps> = ({ toolId, toolData, notify }) => {
+    // Generic State for other tools
     const [inputText, setInputText] = useState('');
+    
+    // specialized State for Meta Generator
+    const [metaTopic, setMetaTopic] = useState('');
+    const [metaKeywords, setMetaKeywords] = useState('');
+    const [metaIntent, setMetaIntent] = useState('Informational');
+
+    // Specialized State for Keyword Tool
+    const [keywordSeed, setKeywordSeed] = useState('');
+    const [keywordFocus, setKeywordFocus] = useState('General Analysis');
+
     const [seoResult, setSeoResult] = useState<string | null>(null);
     const [reasoning, setReasoning] = useState<any>(null);
     const [showReasoning, setShowReasoning] = useState(false);
@@ -67,15 +78,51 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ toolId, toolData, notify }) 
     };
 
     const handleSeoAction = () => {
-        if (!inputText.trim()) { notify("Please provide input text."); return; }
         let prompt = "";
-        switch (toolId) {
-            case 'seo-keyword': prompt = `Act as a senior SEO Specialist. Analyze keyword: "${inputText}". Provide: 1. Search Intent. 2. Estimated Difficulty. 3. 5 long-tail variations. 4. 3 LSI keywords.`; break;
-            case 'seo-meta': prompt = `Act as a Copywriter. Generate 3 SEO-optimized Meta Descriptions for content/title: "${inputText}". Under 160 chars.`; break;
-            case 'seo-content': prompt = `Act as SEO Editor. Analyze: "${inputText}". Suggest improvements for Readability, Keyword placement, Tone.`; break;
-            case 'seo-title': prompt = `Analyze headline: "${inputText}". Score 0-100 CTR potential. Check Power Words, Sentiment, Length.`; break;
-            case 'seo-report': prompt = `Generate text-based SEO Audit Checklist for: "${inputText}". Break down into Technical, On-Page, Off-Page.`; break;
-            default: prompt = inputText;
+        
+        if (toolId === 'seo-meta') {
+             if (!metaTopic.trim()) { notify("Please enter a topic or summary."); return; }
+             prompt = `Act as a senior SEO Copywriter. Generate 5 sets of optimized Title Tags and Meta Descriptions for a web page.
+Page Topic/Summary: "${metaTopic}"
+Target Keywords: "${metaKeywords}"
+Search Intent: "${metaIntent}"
+
+Requirements:
+1. Title Tags: Max 60 characters, include keywords near the front, compelling and click-worthy.
+2. Meta Descriptions: Max 155 characters, include keywords naturally, strong call-to-action.
+3. Provide a variety of tones (e.g., direct, question-based, benefit-driven).
+4. Strictly follow character limits.
+5. Output format:
+Option 1:
+Title: [Title]
+Description: [Description]
+...`;
+        } else if (toolId === 'seo-keyword') {
+             if (!keywordSeed.trim()) { notify("Please enter a seed keyword."); return; }
+             prompt = `Act as an SEO Keyword Strategist.
+Seed Keyword: "${keywordSeed}"
+Analysis Focus: "${keywordFocus}"
+
+Task: Generate a list of 12-15 high-value keyword suggestions based on the seed.
+Format as a structured Markdown Table with these columns:
+1. Keyword/Phrase
+2. Search Intent (Informational, Transactional, etc.)
+3. Estimated Competition (Low, Medium, High)
+4. Potential Content Title Idea
+
+Requirements:
+- If focus is 'Long-tail', prioritize 4+ word phrases.
+- If focus is 'Questions', provide "People Also Ask" style queries.
+- If focus is 'Commercial', look for "best", "vs", "review" terms.
+- Be specific and relevant to the seed topic.`;
+        } else {
+             if (!inputText.trim()) { notify("Please provide input text."); return; }
+             switch (toolId) {
+                case 'seo-content': prompt = `Act as SEO Editor. Analyze: "${inputText}". Suggest improvements for Readability, Keyword placement, Tone.`; break;
+                case 'seo-title': prompt = `Analyze headline: "${inputText}". Score 0-100 CTR potential. Check Power Words, Sentiment, Length.`; break;
+                case 'seo-report': prompt = `Generate text-based SEO Audit Checklist for: "${inputText}". Break down into Technical, On-Page, Off-Page.`; break;
+                default: prompt = inputText;
+            }
         }
         fetchSeoInsights(prompt);
     };
@@ -84,7 +131,7 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ toolId, toolData, notify }) 
         <div className="flex flex-col items-center max-w-4xl mx-auto w-full">
             <div className="w-full bg-gray-900 p-6 md:p-8 rounded-xl border border-gray-800 shadow-xl min-h-[400px]">
                 <div className="flex items-center gap-3 mb-6">
-                    {toolId === 'seo-keyword' && <Search className="text-cyan-400" size={24}/>}
+                    {toolId === 'seo-keyword' && <Tag className="text-cyan-400" size={24}/>}
                     {toolId === 'seo-meta' && <Code className="text-cyan-400" size={24}/>}
                     {toolId === 'seo-content' && <FileText className="text-cyan-400" size={24}/>}
                     {toolId === 'seo-title' && <Type className="text-cyan-400" size={24}/>}
@@ -92,14 +139,92 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ toolId, toolData, notify }) 
                     <h3 className="text-xl font-bold text-white">{toolData.name}</h3>
                 </div>
 
-                <div className="mb-6">
-                    <label className="block text-xs text-gray-500 uppercase mb-2">Input Content</label>
-                    <textarea className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white outline-none focus:border-cyan-500 resize-none h-32 font-mono text-sm" placeholder="Enter input for analysis..." value={inputText} onChange={(e) => setInputText(e.target.value)} />
-                </div>
+                {toolId === 'seo-meta' ? (
+                    <div className="space-y-4 mb-8">
+                        <div>
+                            <label className="block text-xs text-gray-500 uppercase mb-2">Page Topic / Summary</label>
+                            <textarea 
+                                className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white outline-none focus:border-cyan-500 resize-none h-32 font-mono text-sm placeholder-gray-600"
+                                placeholder="What is this page about? E.g., 'A guide on how to bake sourdough bread for beginners with no equipment.'"
+                                value={metaTopic}
+                                onChange={(e) => setMetaTopic(e.target.value)}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs text-gray-500 uppercase mb-2">Target Keywords</label>
+                                <input 
+                                    type="text"
+                                    className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white outline-none focus:border-cyan-500 font-mono text-sm placeholder-gray-600"
+                                    placeholder="e.g. sourdough recipe, easy bread"
+                                    value={metaKeywords}
+                                    onChange={(e) => setMetaKeywords(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-500 uppercase mb-2">Search Intent</label>
+                                <select 
+                                    className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white outline-none focus:border-cyan-500 font-mono text-sm appearance-none cursor-pointer"
+                                    value={metaIntent}
+                                    onChange={(e) => setMetaIntent(e.target.value)}
+                                >
+                                    <option value="Informational">Informational (Guides, Tutorials)</option>
+                                    <option value="Transactional">Transactional (Buy, Download)</option>
+                                    <option value="Navigational">Navigational (Brand Search)</option>
+                                    <option value="Commercial">Commercial (Comparison, Reviews)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                ) : toolId === 'seo-keyword' ? (
+                    <div className="space-y-4 mb-8">
+                        <div>
+                            <label className="block text-xs text-gray-500 uppercase mb-2">Seed Keyword / Topic</label>
+                            <div className="relative">
+                                <input 
+                                    type="text"
+                                    className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 pl-12 text-white outline-none focus:border-cyan-500 font-mono text-sm placeholder-gray-600"
+                                    placeholder="e.g. digital marketing, keto diet, python programming"
+                                    value={keywordSeed}
+                                    onChange={(e) => setKeywordSeed(e.target.value)}
+                                />
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-500 uppercase mb-2">Analysis Focus</label>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {['General Analysis', 'Long-tail Variations', 'Questions & FAQ', 'Commercial Intent'].map(focus => (
+                                    <button
+                                        key={focus}
+                                        onClick={() => setKeywordFocus(focus)}
+                                        className={`p-3 rounded-lg border text-xs font-medium transition-all ${
+                                            keywordFocus === focus 
+                                            ? 'bg-cyan-900/30 border-cyan-500 text-cyan-400' 
+                                            : 'bg-black/30 border-gray-700 text-gray-400 hover:border-gray-600'
+                                        }`}
+                                    >
+                                        {focus}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="mb-6">
+                        <label className="block text-xs text-gray-500 uppercase mb-2">Input Content</label>
+                        <textarea 
+                            className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white outline-none focus:border-cyan-500 resize-none h-32 font-mono text-sm placeholder-gray-600" 
+                            placeholder={toolId === 'seo-title' ? "Enter a headline..." : "Enter text for analysis..."}
+                            value={inputText} 
+                            onChange={(e) => setInputText(e.target.value)} 
+                        />
+                    </div>
+                )}
 
-                <button onClick={handleSeoAction} disabled={loading} className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 py-3 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-2 mb-8">
+                <button onClick={handleSeoAction} disabled={loading} className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 py-3 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-2 mb-8 shadow-lg shadow-cyan-900/20">
                     {loading ? <RefreshCw className="animate-spin" /> : <Sparkles size={18} />}
-                    {loading ? 'Analyzing with AI...' : 'Generate Analysis'}
+                    {loading ? 'Generating with AI...' : (toolId === 'seo-meta' ? 'Generate Tags' : toolId === 'seo-keyword' ? 'Generate Keywords' : 'Generate Analysis')}
                 </button>
 
                 {(seoResult || loading) && (
