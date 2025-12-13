@@ -120,10 +120,11 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-    model: "google/gemini-2.0-flash-exp:free",
-    messages
+body: JSON.stringify({
+   model: "google/gemini-2.0-flash-exp:free",
+    "messages": messages
 })
+
 
         });
 
@@ -330,7 +331,7 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                     <div className="p-4 border-b border-gray-800 bg-gray-950/50 flex justify-between items-center">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>
-                            <span className="text-sm font-medium text-gray-300">Nova-2 Lite (Online)</span>
+                            <span className="text-sm font-medium text-gray-300">gemini-2.0(Online)</span>
                         </div>
                         <button onClick={() => setChatHistory([])} className="text-xs text-gray-500 hover:text-red-400 flex items-center gap-1">
                             <Eraser size={12}/> Clear Chat
