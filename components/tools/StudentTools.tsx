@@ -14,6 +14,75 @@ try {
   console.warn("Failed to set PDF worker source", e);
 }
 
+// --- Markdown Renderer Component ---
+// Handles basic Markdown syntax and cleans up LaTeX math delimiters for cleaner display
+const MarkdownRenderer = ({ content }: { content: string }) => {
+    const processContent = (text: string) => {
+        if (!text) return '';
+        
+        const lines = text.split('\n');
+        let html = '';
+        let inCodeBlock = false;
+
+        lines.forEach(line => {
+            // Handle Code Blocks
+            if (line.trim().startsWith('```')) {
+                inCodeBlock = !inCodeBlock;
+                html += inCodeBlock 
+                    ? '<pre class="bg-black/50 p-4 rounded-lg my-4 overflow-x-auto font-mono text-sm text-green-400 border border-gray-800">' 
+                    : '</pre>';
+                return;
+            }
+            if (inCodeBlock) {
+                // Escape HTML in code blocks
+                const safeLine = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                html += `${safeLine}\n`;
+                return;
+            }
+
+            // Inline Formatting
+            let processedLine = line
+                // Basic HTML Escape
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                // Math Inline \( ... \) -> styled span
+                .replace(/\\\((.*?)\\\)/g, '<span class="font-serif italic text-cyan-300 mx-1">$1</span>')
+                // Math Block \[ ... \] -> styled block
+                .replace(/\\\[(.*?)\\\]/g, '<div class="font-serif italic text-cyan-300 text-center my-4 text-lg py-2 bg-gray-900/50 rounded border border-gray-800/50">$1</div>')
+                // Bold **text**
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+                // Italic *text*
+                .replace(/\*(.*?)\*/g, '<em class="text-gray-400">$1</em>')
+                // Inline Code `text`
+                .replace(/`([^`]+)`/g, '<code class="bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-orange-300">$1</code>');
+
+            // Block Level Elements
+            if (processedLine.startsWith('### ')) {
+                html += `<h3 class="text-lg font-bold text-orange-400 mt-6 mb-3">${processedLine.slice(4)}</h3>`;
+            } else if (processedLine.startsWith('## ')) {
+                html += `<h2 class="text-xl font-bold text-white mt-8 mb-4 border-b border-gray-700 pb-2">${processedLine.slice(3)}</h2>`;
+            } else if (processedLine.startsWith('# ')) {
+                html += `<h1 class="text-2xl font-bold text-white mt-8 mb-6">${processedLine.slice(2)}</h1>`;
+            } else if (processedLine.startsWith('- ')) {
+                html += `<div class="flex items-start gap-2 mb-2 ml-2"><span class="text-orange-500 mt-1.5">•</span><span class="text-gray-300 flex-1 leading-relaxed">${processedLine.slice(2)}</span></div>`;
+            } else if (/^\d+\./.test(processedLine)) {
+                const number = processedLine.match(/^\d+\./)?.[0];
+                const content = processedLine.replace(/^\d+\.\s*/, '');
+                html += `<div class="flex items-start gap-2 mb-2 ml-2"><span class="text-orange-500 font-bold min-w-[20px]">${number}</span><span class="text-gray-300 flex-1 leading-relaxed">${content}</span></div>`;
+            } else if (processedLine.startsWith('> ')) {
+                html += `<div class="border-l-4 border-orange-500/50 pl-4 py-1 my-3 text-gray-400 italic">${processedLine.slice(2)}</div>`;
+            } else if (processedLine.trim() === '') {
+                html += '<div class="h-2"></div>';
+            } else {
+                html += `<p class="mb-2 leading-relaxed text-gray-300">${processedLine}</p>`;
+            }
+        });
+
+        return html;
+    };
+
+    return <div dangerouslySetInnerHTML={{ __html: processContent(content) }} className="markdown-content" />;
+};
+
 interface StudentToolsProps {
   toolId: string;
   notify: (msg: string) => void;
@@ -137,7 +206,7 @@ RULES (Strictly Follow):
 5. Do not skip steps in examples or solutions.
 6. Include **tips, mnemonics, or shortcuts** where relevant.
 7. Always provide a **"Key Takeaways"** section at the end.
-8. Use Markdown for formatting (bolding, tables, code blocks). Render math equations clearly.
+8. Use Markdown for formatting (bolding, tables, code blocks). Render math equations using standard LaTeX delimiters like \\( x^2 \\) or \\[ x^2 \\].
 
 TASK:
 - Based on the user's input (which may be raw notes, a PDF dump, or just a topic name), generate full structured content.
@@ -196,10 +265,11 @@ TASK:
             Difficulty: ${questionDifficulty}.
             
             Formatting Rules:
-            1. Use Markdown.
-            2. If 'Multiple Choice', provide options A, B, C, D for each question.
-            3. Provide an ANSWER KEY section at the very end of the response.
-            4. Ensure questions are directly relevant to the text provided.
+            1. Use Markdown headers (###) for sections.
+            2. Use bold (**text**) for emphasis.
+            3. If 'Multiple Choice', provide options A, B, C, D for each question.
+            4. Provide an ANSWER KEY section at the very end of the response.
+            5. Use \\( ... \\) for inline math equations.
             
             Example Output Format for MCQ:
             1. Question text?
@@ -486,9 +556,7 @@ TASK:
                                         <span className="text-sm">Generating study content...</span>
                                     </div>
                                 ) : notesOutput ? (
-                                    <div className="prose prose-invert prose-sm max-w-none">
-                                        <div className="whitespace-pre-wrap leading-relaxed text-gray-300">{notesOutput}</div>
-                                    </div>
+                                    <MarkdownRenderer content={notesOutput} />
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-gray-700">
                                         <FileText size={32} className="mb-3 opacity-20"/>
@@ -590,9 +658,7 @@ TASK:
                                         <span className="text-sm">Creating questions...</span>
                                     </div>
                                 ) : questionOutput ? (
-                                    <div className="prose prose-invert prose-sm max-w-none">
-                                        <div className="whitespace-pre-wrap leading-relaxed text-gray-300">{questionOutput}</div>
-                                    </div>
+                                    <MarkdownRenderer content={questionOutput} />
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-gray-700">
                                         <HelpCircle size={32} className="mb-3 opacity-20"/>
@@ -659,7 +725,7 @@ TASK:
                                         <span className="text-sm">Rewriting content...</span>
                                     </div>
                                 ) : paraphraseOutput ? (
-                                    <p className="text-white whitespace-pre-wrap leading-relaxed">{paraphraseOutput}</p>
+                                    <MarkdownRenderer content={paraphraseOutput} />
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-gray-700">
                                         <RefreshCw size={32} className="mb-3 opacity-20"/>
@@ -759,7 +825,7 @@ TASK:
                             </div>
                             <div className="bg-[#0a0e14] rounded-xl border border-gray-800 p-6 relative overflow-hidden">
                                 <div className="whitespace-pre-wrap font-serif text-gray-300 leading-relaxed text-lg">
-                                    {writerOutput}
+                                    <MarkdownRenderer content={writerOutput} />
                                 </div>
                             </div>
                         </div>
@@ -828,7 +894,9 @@ TASK:
                                         <span className="text-sm">Polishing your writing...</span>
                                     </div>
                                 ) : grammarOutput ? (
-                                    <p className="text-white whitespace-pre-wrap leading-relaxed">{grammarOutput}</p>
+                                    <div className="text-white whitespace-pre-wrap leading-relaxed">
+                                        <MarkdownRenderer content={grammarOutput} />
+                                    </div>
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-gray-700">
                                         <Sparkles size={32} className="mb-3 opacity-20"/>
