@@ -1,8 +1,10 @@
 
-import React, { useState } from 'react';
-import { GraduationCap, Trash2, Plus, BookOpen, Copy, CheckCircle, RefreshCw, BookCheck, AlertTriangle, Check, ArrowRight, Sparkles, SlidersHorizontal, StickyNote, FileUp, FileText, FileQuestion, HelpCircle, Image as ImageIcon, X, FileSpreadsheet } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { GraduationCap, Trash2, Plus, BookOpen, Copy, CheckCircle, RefreshCw, BookCheck, AlertTriangle, Check, ArrowRight, Sparkles, SlidersHorizontal, StickyNote, FileUp, FileText, FileQuestion, HelpCircle, Image as ImageIcon, X, FileSpreadsheet, Download, File as FileIcon } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import katex from 'katex';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import { getAiConfig } from '../../utils/ai';
 
 // Fix for PDF.js worker
@@ -171,6 +173,10 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
     const [solverFile, setSolverFile] = useState<File | null>(null);
     const [solverFileContent, setSolverFileContent] = useState<string | null>(null); // Base64 or Text
     const [isImageUpload, setIsImageUpload] = useState(false);
+    
+    // Solver Download State
+    const solutionRef = useRef<HTMLDivElement>(null);
+    const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
     // Lecture Notes State
     const [notesInput, setNotesInput] = useState('');
@@ -267,6 +273,115 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
             // In a real production app, we would use mammoth.js or XLSX here.
             notify("Doc uploaded. Note: Complex formatting may be lost.");
             setSolverFileContent(`[Attached File: ${file.name}]`);
+        }
+    };
+
+    // Helper: Clean Copy from Rendered View
+    const handleCopyRendered = () => {
+        if (solutionRef.current) {
+            // Use innerText to get the human-readable visual text
+            const text = solutionRef.current.innerText;
+            navigator.clipboard.writeText(text);
+            notify("Copied answer!");
+        } else if (solverOutput) {
+            navigator.clipboard.writeText(solverOutput);
+            notify("Copied source text.");
+        }
+    };
+
+    // Helper: Generate Word HTML with MathML
+    const generateWordHtml = (text: string) => {
+        // Replace Block Math $$...$$ with MathML
+        let html = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, equation) => {
+            try {
+                return `<div style="text-align:center; margin: 10px 0;">${katex.renderToString(equation, { output: 'mathml', displayMode: true })}</div>`;
+            } catch { return match; }
+        });
+
+        // Replace Inline Math $...$ with MathML
+        html = html.replace(/\$([^$\n]+?)\$/g, (match, equation) => {
+            try {
+                return katex.renderToString(equation, { output: 'mathml', displayMode: false });
+            } catch { return match; }
+        });
+
+        // Basic Formatting
+        html = html
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+            .replace(/\*(.*?)\*/g, '<i>$1</i>')
+            .replace(/\n/g, '<br>');
+
+        return `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset="utf-8"><title>Solution</title></head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.5;">
+                <h1>Homework Solution</h1>
+                <p><strong>Field:</strong> ${solverSubject}</p>
+                <hr/>
+                ${html}
+            </body>
+            </html>
+        `;
+    };
+
+    const handleDownloadSolution = async (format: 'pdf' | 'word' | 'excel') => {
+        if (!solverOutput) return;
+        setShowDownloadMenu(false);
+        const filename = `homework-solution-${Date.now()}`;
+    
+        if (format === 'pdf') {
+            if (!solutionRef.current) return;
+            notify("Generating PDF...");
+            try {
+                // Use html2canvas to capture visual representation including math
+                const canvas = await html2canvas(solutionRef.current, {
+                    scale: 2,
+                    backgroundColor: '#1e1e1e',
+                    logging: false,
+                    useCORS: true
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height] 
+                });
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save(`${filename}.pdf`);
+                notify("PDF Saved!");
+            } catch (e) {
+                console.error(e);
+                notify("PDF Error.");
+            }
+        } else if (format === 'word') {
+            // Render HTML with MathML for Word
+            const content = generateWordHtml(solverOutput);
+            const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${filename}.doc`;
+            link.click();
+            notify("Doc Saved!");
+        } else if (format === 'excel') {
+            // CSV Export - Clean Text Only
+            const cleanText = solutionRef.current?.innerText || solverOutput;
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                `"Field","${solverSubject}"\n` +
+                `"Solution",\n` +
+                cleanText.split('\n').map(line => `"${line.replace(/"/g, '""')}"`).join('\n');
+                
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.href = encodedUri;
+            link.download = `${filename}.csv`;
+            link.click();
+            notify("Excel/CSV Saved!");
         }
     };
 
@@ -867,15 +982,44 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex justify-between items-center mb-3">
                                 <h4 className="text-sm font-medium text-gray-400 uppercase">Textbook Solution</h4>
-                                {solverOutput && (
-                                    <button onClick={() => {navigator.clipboard.writeText(solverOutput); notify("Answer Copied!");}} className="text-xs text-orange-400 hover:text-white flex items-center gap-1">
-                                        <Copy size={12}/> Copy
-                                    </button>
-                                )}
+                                <div className="flex gap-2">
+                                    {solverOutput && (
+                                        <div className="relative">
+                                            <button 
+                                                onClick={() => setShowDownloadMenu(!showDownloadMenu)} 
+                                                className="text-xs text-orange-400 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700 transition-colors"
+                                            >
+                                                <Download size={12}/> Download
+                                            </button>
+                                            {showDownloadMenu && (
+                                                <div 
+                                                    className="absolute right-0 mt-2 w-40 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                                                    onMouseLeave={() => setShowDownloadMenu(false)}
+                                                >
+                                                    <button onClick={() => handleDownloadSolution('pdf')} className="w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-gray-800 hover:text-white flex items-center gap-2">
+                                                        <FileText size={14} className="text-red-400"/> PDF Document
+                                                    </button>
+                                                    <button onClick={() => handleDownloadSolution('word')} className="w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-gray-800 hover:text-white flex items-center gap-2 border-t border-gray-800">
+                                                        <FileIcon size={14} className="text-blue-400"/> Word (.doc)
+                                                    </button>
+                                                    <button onClick={() => handleDownloadSolution('excel')} className="w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-gray-800 hover:text-white flex items-center gap-2 border-t border-gray-800">
+                                                        <FileSpreadsheet size={14} className="text-green-400"/> Excel (.csv)
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {solverOutput && (
+                                        <button onClick={handleCopyRendered} className="text-xs text-orange-400 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700 transition-colors">
+                                            <Copy size={12}/> Copy
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                             
                             {/* Textbook Page Styling - Dark Mode Clean */}
                             <div 
+                                ref={solutionRef}
                                 className="relative rounded-xl overflow-hidden shadow-2xl bg-[#1e1e1e] border border-gray-700"
                             >
                                 <div className="p-8 leading-[32px]">
