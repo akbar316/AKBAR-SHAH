@@ -121,14 +121,27 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
         setNotesOutput('');
 
         try {
-            let promptInstruction = "";
-            switch (notesMode) {
-                case 'Bullet Points': promptInstruction = "Summarize the content into concise, easy-to-read bullet points. Highlight key takeaways."; break;
-                case 'Study Guide': promptInstruction = "Create a structured study guide with Main Topics, Key Terminology definitions, and Important Concepts."; break;
-                case 'Q&A': promptInstruction = "Generate a list of 10-15 practice questions and answers based on the text to help test understanding."; break;
-                case 'Key Concepts': promptInstruction = "Extract the top 5 most important concepts and explain them simply."; break;
-                default: promptInstruction = "Summarize the text.";
-            }
+            // Updated "Expert Educator" System Prompt
+            const systemInstruction = `You are an expert educator and content designer for students of all levels (middle school, high school, university). Your task is to generate high-quality, structured, and visually organized content for any academic subject.
+
+RULES (Strictly Follow):
+1. Always identify the subject and topic from the input before starting.
+2. Layout Type: ${notesMode}
+   - If "Lecture Notes": Provide detailed structure, theory, and hierarchy.
+   - If "Bullet Points": Provide concise summaries and rapid-fire facts.
+   - If "Study Guide": Focus on definitions, key terms, and core concepts.
+   - If "Q&A": Generate exercises with step-by-step solutions/answers.
+   - If "Key Concepts": Extract and deeply explain the top 5 ideas.
+3. Make content **clear, concise, and student-friendly**.
+4. Use headings, subheadings, numbering, and bullets for clarity.
+5. Do not skip steps in examples or solutions.
+6. Include **tips, mnemonics, or shortcuts** where relevant.
+7. Always provide a **"Key Takeaways"** section at the end.
+8. Use Markdown for formatting (bolding, tables, code blocks). Render math equations clearly.
+
+TASK:
+- Based on the user's input (which may be raw notes, a PDF dump, or just a topic name), generate full structured content.
+- Differentiate between theory, examples, and exercises using formatting.`;
 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
@@ -139,8 +152,8 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                 body: JSON.stringify({
                     "model": model,
                     "messages": [
-                        { "role": "system", "content": `You are an expert Academic Study Assistant. Task: ${promptInstruction}. Format using Markdown.` },
-                        { "role": "user", "content": notesInput }
+                        { "role": "system", "content": systemInstruction },
+                        { "role": "user", "content": `INPUT CONTENT:\n${notesInput}` }
                     ]
                 })
             });
@@ -423,7 +436,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                     <div className="mb-6">
                         <label className="text-xs text-gray-500 uppercase mb-2 block">Generation Mode</label>
                         <div className="flex flex-wrap gap-2">
-                            {['Bullet Points', 'Study Guide', 'Q&A', 'Key Concepts'].map(mode => (
+                            {['Bullet Points', 'Study Guide', 'Q&A', 'Key Concepts', 'Lecture Notes'].map(mode => (
                                 <button 
                                     key={mode}
                                     onClick={() => setNotesMode(mode)}
@@ -445,12 +458,12 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                             
                             <div className="flex-1 flex flex-col">
                                 <label className="text-sm text-gray-400 mb-2 flex justify-between">
-                                    <span>Or Paste Text</span>
+                                    <span>Or Paste Text / Topic</span>
                                     {notesFile && <span className="text-orange-400 text-xs flex items-center gap-1"><CheckCircle size={10}/> {notesFile.name} loaded</span>}
                                 </label>
                                 <textarea 
                                     className="flex-1 bg-black/30 border border-gray-700 rounded-xl p-4 text-white resize-none focus:border-orange-500 outline-none font-sans leading-relaxed custom-scrollbar text-sm" 
-                                    placeholder="Paste lecture notes, chapter text, or meeting minutes here..." 
+                                    placeholder="Paste lecture notes OR type a specific topic (e.g. 'Thermodynamics Laws')..." 
                                     value={notesInput} 
                                     onChange={(e) => setNotesInput(e.target.value)}
                                 />
@@ -470,7 +483,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                                 {isSummarizing ? (
                                     <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-500">
                                         <RefreshCw className="animate-spin text-orange-400" size={24}/> 
-                                        <span className="text-sm">Analyzing notes...</span>
+                                        <span className="text-sm">Generating study content...</span>
                                     </div>
                                 ) : notesOutput ? (
                                     <div className="prose prose-invert prose-sm max-w-none">
@@ -491,7 +504,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                         disabled={isSummarizing || !notesInput.trim()}
                         className="w-full mt-6 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 py-3 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-orange-900/20"
                     >
-                        {isSummarizing ? 'Processing...' : 'Generate Study Notes'}
+                        {isSummarizing ? 'Processing...' : `Generate ${notesMode}`}
                     </button>
                  </div>
             )}
