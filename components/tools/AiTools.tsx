@@ -121,9 +121,10 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                "model": "amazon/nova-2-lite-v1:free",
-                "messages": messages
-            })
+    model: "google/gemini-2.0-flash-exp:free",
+    messages
+})
+
         });
 
         if (!response.ok) {
