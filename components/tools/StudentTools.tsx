@@ -15,72 +15,107 @@ try {
 }
 
 // --- Markdown Renderer Component ---
-// Handles basic Markdown syntax and cleans up LaTeX math delimiters for cleaner display
+// Improved to handle block math, headers, and lists more cleanly "Book Style"
 const MarkdownRenderer = ({ content }: { content: string }) => {
     const processContent = (text: string) => {
         if (!text) return '';
         
-        const lines = text.split('\n');
+        // 1. Pre-process block math to avoid breaking on newlines
+        // Replace $$ ... $$ with a placeholder
+        const mathBlocks: string[] = [];
+        let processedText = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, equation) => {
+            mathBlocks.push(equation);
+            return `__MATH_BLOCK_${mathBlocks.length - 1}__`;
+        });
+
+        // 2. Split into lines for markdown processing
+        const lines = processedText.split('\n');
         let html = '';
         let inCodeBlock = false;
 
-        lines.forEach(line => {
+        lines.forEach((line, index) => {
+            let cleanLine = line; 
+
             // Handle Code Blocks
-            if (line.trim().startsWith('```')) {
+            if (cleanLine.trim().startsWith('```')) {
                 inCodeBlock = !inCodeBlock;
                 html += inCodeBlock 
-                    ? '<pre class="bg-black/50 p-4 rounded-lg my-4 overflow-x-auto font-mono text-sm text-green-400 border border-gray-800">' 
-                    : '</pre>';
+                    ? '<div class="bg-[#1e1e1e] p-4 rounded-lg my-4 overflow-x-auto font-mono text-sm text-[#d4d4d4] border border-gray-700 shadow-inner">' 
+                    : '</div>';
                 return;
             }
             if (inCodeBlock) {
-                // Escape HTML in code blocks
-                const safeLine = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                html += `${safeLine}\n`;
+                const safeLine = cleanLine.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                html += `<div class="whitespace-pre">${safeLine}</div>`;
                 return;
             }
 
-            // Inline Formatting
-            let processedLine = line
-                // Basic HTML Escape
+            cleanLine = cleanLine.trim();
+
+            // Skip empty lines but add spacing
+            if (!cleanLine) {
+                html += '<div class="h-4"></div>';
+                return;
+            }
+
+            // --- Inline Formatting ---
+            let formattedLine = cleanLine
                 .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                // Math Inline \( ... \) -> styled span
+                // Math Inline \( ... \) or $ ... $
                 .replace(/\\\((.*?)\\\)/g, '<span class="font-serif italic text-cyan-300 mx-1">$1</span>')
-                // Math Block \[ ... \] -> styled block
-                .replace(/\\\[(.*?)\\\]/g, '<div class="font-serif italic text-cyan-300 text-center my-4 text-lg py-2 bg-gray-900/50 rounded border border-gray-800/50">$1</div>')
+                .replace(/\$([^$]+)\$/g, '<span class="font-serif italic text-cyan-300 mx-1">$1</span>')
                 // Bold **text**
                 .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+                // Bold __text__
+                .replace(/__(.*?)__/g, '<strong class="text-white font-bold">$1</strong>')
                 // Italic *text*
-                .replace(/\*(.*?)\*/g, '<em class="text-gray-400">$1</em>')
+                .replace(/\*(.*?)\*/g, '<em class="text-gray-300">$1</em>')
                 // Inline Code `text`
-                .replace(/`([^`]+)`/g, '<code class="bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-orange-300">$1</code>');
+                .replace(/`([^`]+)`/g, '<code class="bg-gray-800/80 px-1.5 py-0.5 rounded text-sm font-mono text-orange-300 border border-gray-700">$1</code>');
 
-            // Block Level Elements
-            if (processedLine.startsWith('### ')) {
-                html += `<h3 class="text-lg font-bold text-orange-400 mt-6 mb-3">${processedLine.slice(4)}</h3>`;
-            } else if (processedLine.startsWith('## ')) {
-                html += `<h2 class="text-xl font-bold text-white mt-8 mb-4 border-b border-gray-700 pb-2">${processedLine.slice(3)}</h2>`;
-            } else if (processedLine.startsWith('# ')) {
-                html += `<h1 class="text-2xl font-bold text-white mt-8 mb-6">${processedLine.slice(2)}</h1>`;
-            } else if (processedLine.startsWith('- ')) {
-                html += `<div class="flex items-start gap-2 mb-2 ml-2"><span class="text-orange-500 mt-1.5">•</span><span class="text-gray-300 flex-1 leading-relaxed">${processedLine.slice(2)}</span></div>`;
-            } else if (/^\d+\./.test(processedLine)) {
-                const number = processedLine.match(/^\d+\./)?.[0];
-                const content = processedLine.replace(/^\d+\.\s*/, '');
-                html += `<div class="flex items-start gap-2 mb-2 ml-2"><span class="text-orange-500 font-bold min-w-[20px]">${number}</span><span class="text-gray-300 flex-1 leading-relaxed">${content}</span></div>`;
-            } else if (processedLine.startsWith('> ')) {
-                html += `<div class="border-l-4 border-orange-500/50 pl-4 py-1 my-3 text-gray-400 italic">${processedLine.slice(2)}</div>`;
-            } else if (processedLine.trim() === '') {
-                html += '<div class="h-2"></div>';
-            } else {
-                html += `<p class="mb-2 leading-relaxed text-gray-300">${processedLine}</p>`;
+            // Restore Math Blocks
+            formattedLine = formattedLine.replace(/__MATH_BLOCK_(\d+)__/g, (match, id) => {
+                return `<div class="font-serif italic text-cyan-300 text-center my-6 text-xl py-4 bg-gray-900/50 rounded-lg border border-gray-800/50 shadow-sm overflow-x-auto">$$ ${mathBlocks[parseInt(id)]} $$</div>`;
+            });
+
+            // --- Block Level Elements ---
+            
+            // Headers
+            if (cleanLine.startsWith('### ')) {
+                html += `<h3 class="text-lg font-bold text-orange-400 mt-6 mb-3 flex items-center gap-2"><span class="w-1 h-4 bg-orange-500 rounded-full inline-block"></span>${formattedLine.slice(4)}</h3>`;
+            } else if (cleanLine.startsWith('## ')) {
+                html += `<h2 class="text-xl font-bold text-white mt-8 mb-4 border-b border-gray-800 pb-2">${formattedLine.slice(3)}</h2>`;
+            } else if (cleanLine.startsWith('# ')) {
+                html += `<h1 class="text-2xl font-extrabold text-white mt-8 mb-6 tracking-tight">${formattedLine.slice(2)}</h1>`;
+            } 
+            // Lists
+            else if (cleanLine.startsWith('- ') || cleanLine.startsWith('* ')) {
+                html += `<div class="flex items-start gap-3 mb-2 ml-1">
+                            <span class="text-orange-500 mt-1.5 text-xs">●</span>
+                            <span class="text-gray-300 flex-1 leading-relaxed">${formattedLine.slice(2)}</span>
+                         </div>`;
+            } else if (/^\d+\./.test(cleanLine)) {
+                const number = cleanLine.match(/^\d+\./)?.[0];
+                const content = formattedLine.replace(/^\d+\.\s*/, '');
+                html += `<div class="flex items-start gap-3 mb-2 ml-1">
+                            <span class="text-orange-500 font-mono font-bold min-w-[20px] text-right">${number}</span>
+                            <span class="text-gray-300 flex-1 leading-relaxed">${content}</span>
+                         </div>`;
+            } 
+            // Blockquotes / Callouts
+            else if (cleanLine.startsWith('> ')) {
+                html += `<div class="border-l-4 border-orange-500 bg-gray-900/50 p-4 my-4 rounded-r-lg text-gray-300 italic shadow-sm">${formattedLine.slice(2)}</div>`;
+            } 
+            // Standard Paragraph
+            else {
+                html += `<p class="mb-3 leading-relaxed text-gray-300">${formattedLine}</p>`;
             }
         });
 
         return html;
     };
 
-    return <div dangerouslySetInnerHTML={{ __html: processContent(content) }} className="markdown-content" />;
+    return <div dangerouslySetInnerHTML={{ __html: processContent(content) }} className="markdown-content font-sans text-base" />;
 };
 
 interface StudentToolsProps {
@@ -190,27 +225,26 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
         setNotesOutput('');
 
         try {
-            // Updated "Expert Educator" System Prompt
-            const systemInstruction = `You are an expert educator and content designer for students of all levels (middle school, high school, university). Your task is to generate high-quality, structured, and visually organized content for any academic subject.
+            // "Expert Educator" System Prompt
+            const systemInstruction = `You are a professional educator and content creator for students. Generate structured, detailed, and student-friendly content for any topic.
 
-RULES (Strictly Follow):
-1. Always identify the subject and topic from the input before starting.
-2. Layout Type: ${notesMode}
-   - If "Lecture Notes": Provide detailed structure, theory, and hierarchy.
-   - If "Bullet Points": Provide concise summaries and rapid-fire facts.
-   - If "Study Guide": Focus on definitions, key terms, and core concepts.
-   - If "Q&A": Generate exercises with step-by-step solutions/answers.
-   - If "Key Concepts": Extract and deeply explain the top 5 ideas.
-3. Make content **clear, concise, and student-friendly**.
-4. Use headings, subheadings, numbering, and bullets for clarity.
-5. Do not skip steps in examples or solutions.
-6. Include **tips, mnemonics, or shortcuts** where relevant.
-7. Always provide a **"Key Takeaways"** section at the end.
-8. Use Markdown for formatting (bolding, tables, code blocks). Render math equations using standard LaTeX delimiters like \\( x^2 \\) or \\[ x^2 \\].
+Requirements:
+1. Clearly label each section: Question, Step-by-Step Solution, Final Answer, Key Concepts, Common Mistakes, Key Takeaways, Practice Exercises.
+2. For solutions, explain each step thoroughly:
+   - Identify terms or components
+   - Specify which rule or formula applies
+   - Show intermediate steps
+3. Use LaTeX for all mathematical formulas (enclose in $$ for blocks or $ for inline).
+4. Use Markdown headings (###), subheadings, and bullet points to enhance readability.
+5. Include tips, mnemonics, and warnings about common mistakes.
+6. Provide at least one practice exercise with a worked solution.
+7. Arrange steps logically, simplify results, and highlight the final answer.
+8. Output Format: Clean Markdown. Do NOT use code blocks for the main content. Do NOT use unused hashes or brackets.
 
-TASK:
-- Based on the user's input (which may be raw notes, a PDF dump, or just a topic name), generate full structured content.
-- Differentiate between theory, examples, and exercises using formatting.`;
+Task:
+- Subject/Topic: Derived from user input below.
+- Mode: ${notesMode}
+`;
 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
@@ -269,7 +303,8 @@ TASK:
             2. Use bold (**text**) for emphasis.
             3. If 'Multiple Choice', provide options A, B, C, D for each question.
             4. Provide an ANSWER KEY section at the very end of the response.
-            5. Use \\( ... \\) for inline math equations.
+            5. Use $...$ for inline math and $$...$$ for block equations.
+            6. Keep the layout clean and professional.
             
             Example Output Format for MCQ:
             1. Question text?
@@ -395,7 +430,7 @@ TASK:
             - Structure: Well-organized with clear introduction, body paragraphs, and conclusion (if applicable).
             - Style: Use transition words and vocabulary suitable for the selected tone.
             
-            Format your response with proper Markdown (e.g. # Headings, **bold**, etc).
+            Format your response with proper Markdown (e.g. ### Headings, **bold**, etc).
             Do not include conversational filler like "Here is your essay". Start directly with the content.`;
 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
