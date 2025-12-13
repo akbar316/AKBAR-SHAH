@@ -156,7 +156,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    "model": "amazon/nova-2-lite-v1:free",
+                     model: "google/gemini-2.0-flash-exp:free",
                     "messages": [
                         { "role": "system", "content": `You are an expert Academic Study Assistant. Task: ${promptInstruction}. Format using Markdown.` },
                         { "role": "user", "content": notesInput }
