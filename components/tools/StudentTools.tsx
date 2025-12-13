@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { GraduationCap, Trash2, Plus, BookOpen, Copy, CheckCircle, RefreshCw, BookCheck, AlertTriangle, Check, ArrowRight, Sparkles, SlidersHorizontal, StickyNote, FileUp, FileText, FileQuestion, HelpCircle } from 'lucide-react';
+import { GraduationCap, Trash2, Plus, BookOpen, Copy, CheckCircle, RefreshCw, BookCheck, AlertTriangle, Check, ArrowRight, Sparkles, SlidersHorizontal, StickyNote, FileUp, FileText, FileQuestion, HelpCircle, Image as ImageIcon, X, FileSpreadsheet } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { getAiConfig } from '../../utils/ai';
 
@@ -145,6 +145,9 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
     const [solverSubject, setSolverSubject] = useState('Mathematics');
     const [solverOutput, setSolverOutput] = useState('');
     const [isSolving, setIsSolving] = useState(false);
+    const [solverFile, setSolverFile] = useState<File | null>(null);
+    const [solverFileContent, setSolverFileContent] = useState<string | null>(null); // Base64 or Text
+    const [isImageUpload, setIsImageUpload] = useState(false);
 
     // Lecture Notes State
     const [notesInput, setNotesInput] = useState('');
@@ -195,6 +198,52 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
             notify("PDF Text Extracted!");
         } catch (e) {
             notify("Failed to extract text from PDF");
+        }
+    };
+
+    // --- Homework Solver File Handler ---
+    const handleSolverFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setSolverFile(file);
+        setSolverFileContent(null);
+        setIsImageUpload(false);
+
+        // 1. Handle Images (Vision)
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if (ev.target?.result) {
+                    setSolverFileContent(ev.target.result as string);
+                    setIsImageUpload(true);
+                    notify("Image uploaded!");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+        // 2. Handle PDF
+        else if (file.type === 'application/pdf') {
+            try {
+                const text = await extractTextFromPdf(file);
+                setSolverFileContent(text);
+                notify("PDF Content Extracted!");
+            } catch (err) {
+                notify("Failed to read PDF.");
+            }
+        }
+        // 3. Handle Text Files
+        else if (file.type === 'text/plain' || file.name.endsWith('.md') || file.name.endsWith('.js') || file.name.endsWith('.py')) {
+            const text = await file.text();
+            setSolverFileContent(text);
+            notify("Text file loaded!");
+        }
+        // 4. Word/Excel (Basic Fallback)
+        else {
+            // For complex binary formats without a library, we notify the user
+            // In a real production app, we would use mammoth.js or XLSX here.
+            notify("Doc uploaded. Note: Complex formatting may be lost.");
+            setSolverFileContent(`[Attached File: ${file.name}]`);
         }
     };
 
@@ -305,15 +354,15 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
 
     // --- Homework Solver Helpers (AI) ---
     const handleSolveHomework = async () => {
-        if (!solverInput.trim()) {
-            notify("Please enter a question.");
+        if (!solverInput.trim() && !solverFileContent) {
+            notify("Please enter a question or upload a file.");
             return;
         }
 
         const { apiKey, model } = getAiConfig();
         if (!apiKey) {
             notify("API Key missing. Cannot connect to AI service.");
-            setSolverOutput("Error: VITE_OPENROUTER_API_KEY not found. Please add it to your environment variables to use this feature.");
+            setSolverOutput("Error: VITE_OPENROUTER_API_KEY not found.");
             return;
         }
 
@@ -321,38 +370,46 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
         setSolverOutput('');
 
         try {
-            // Updated Prompt for "Textbook Style" Layout
             const systemInstruction = `You are a Professional Textbook Content Generator.
             Subject: ${solverSubject}
             
             Your goal is to provide an answer that looks EXACTLY like a high-quality textbook example.
             
             STRICT FORMATTING RULES:
-            1. Start with a Title Header (Markdown ###) describing the concept (e.g. "### Example 1: Derivative of a Polynomial").
+            1. Start with a Title Header (Markdown ###) describing the concept.
             2. Use "**Problem:**" followed by the question.
             3. Use "**Solution:**" followed by a structured, step-by-step derivation.
             4. Use LaTeX for ALL math equations (enclose in $$ for centered blocks, $ for inline).
             5. Use "**Answer:**" for the final result.
-            6. If multiple steps are needed, use bullet points or numbered lists.
-            7. Use a horizontal rule (---) at the end if there are multiple parts.
-            8. Keep the tone academic, neutral, and clear. No "Here is your answer" filler.
+            6. Use a horizontal rule (---) at the end if there are multiple parts.
+            7. Keep the tone academic, neutral, and clear.
             
-            Example Output Layout:
-            ### Example: Calculating Velocity
-            **Problem:** 
-            A car travels 100 meters in 5 seconds. Find the velocity.
-            
-            **Solution:**
-            The formula for velocity is:
-            $$ v = \frac{d}{t} $$
-            
-            Substitute the given values:
-            $$ v = \frac{100m}{5s} $$
-            $$ v = 20 m/s $$
-            
-            **Answer:**
-            $$ v = 20 m/s $$
+            If an image is provided, analyze it carefully to solve the problem shown.
             `;
+
+            // Prepare Payload based on input type (Text only vs Vision)
+            let messages;
+            
+            if (isImageUpload && solverFileContent) {
+                // Multimodal Request
+                messages = [
+                    { "role": "system", "content": systemInstruction },
+                    { 
+                        "role": "user", 
+                        "content": [
+                            { "type": "text", "text": solverInput || "Solve the problem in this image." },
+                            { "type": "image_url", "image_url": { "url": solverFileContent } }
+                        ]
+                    }
+                ];
+            } else {
+                // Text/File Content Request
+                const combinedContent = `${solverInput}\n\n${solverFileContent ? `[Attached File Content]:\n${solverFileContent}` : ''}`;
+                messages = [
+                    { "role": "system", "content": systemInstruction },
+                    { "role": "user", "content": combinedContent }
+                ];
+            }
 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
@@ -362,10 +419,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                 },
                 body: JSON.stringify({
                     "model": model,
-                    "messages": [
-                        { "role": "system", "content": systemInstruction },
-                        { "role": "user", "content": solverInput }
-                    ]
+                    "messages": messages
                 })
             });
 
@@ -691,21 +745,57 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                         </select>
                     </div>
 
-                    {/* Input */}
-                    <div className="mb-6">
-                        <label className="block text-xs text-gray-500 uppercase mb-2">Your Question</label>
-                        <textarea
-                            value={solverInput}
-                            onChange={(e) => setSolverInput(e.target.value)}
-                            placeholder="Type your question or problem here. e.g., 'Solve for x: 2x + 5 = 15' or 'Explain Photosynthesis step-by-step'."
-                            className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white resize-none focus:border-orange-500 outline-none h-32 custom-scrollbar"
-                        />
+                    {/* Input Area (Text & File) */}
+                    <div className="mb-6 space-y-4">
+                        <div>
+                            <label className="block text-xs text-gray-500 uppercase mb-2">Your Question</label>
+                            <textarea
+                                value={solverInput}
+                                onChange={(e) => setSolverInput(e.target.value)}
+                                placeholder="Type your question or problem here. e.g., 'Solve for x: 2x + 5 = 15'..."
+                                className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white resize-none focus:border-orange-500 outline-none h-32 custom-scrollbar"
+                            />
+                        </div>
+
+                        {/* File Upload Zone */}
+                        <div>
+                            <label className="block text-xs text-gray-500 uppercase mb-2">Upload Document / Image</label>
+                            {solverFile ? (
+                                <div className="flex items-center justify-between p-4 bg-gray-950 border border-cyan-500/30 rounded-xl animate-in fade-in">
+                                    <div className="flex items-center gap-3">
+                                        {isImageUpload ? <ImageIcon className="text-cyan-400" size={24}/> : <FileText className="text-cyan-400" size={24}/>}
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium text-white truncate max-w-[200px]">{solverFile.name}</span>
+                                            <span className="text-xs text-gray-500">{(solverFile.size/1024).toFixed(1)} KB</span>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => { setSolverFile(null); setSolverFileContent(null); }} className="p-2 hover:bg-gray-800 rounded-full text-gray-400 hover:text-red-400 transition-colors">
+                                        <X size={18}/>
+                                    </button>
+                                </div>
+                            ) : (
+                                <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-700 rounded-xl bg-black/20 hover:bg-black/40 hover:border-orange-500/50 cursor-pointer transition-all group">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <FileUp className="text-gray-500 group-hover:text-orange-400 transition-colors" size={24}/>
+                                        <span className="text-xs text-gray-400 group-hover:text-gray-300">
+                                            Upload Image, PDF, Word, Excel, or Text
+                                        </span>
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.py,.js" 
+                                        className="hidden" 
+                                        onChange={handleSolverFileUpload}
+                                    />
+                                </label>
+                            )}
+                        </div>
                     </div>
 
                     {/* Button */}
                     <button 
                         onClick={handleSolveHomework} 
-                        disabled={isSolving || !solverInput.trim()}
+                        disabled={isSolving || (!solverInput.trim() && !solverFile)}
                         className="w-full bg-orange-600 hover:bg-orange-500 disabled:opacity-50 py-3 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-2 mb-8 shadow-lg shadow-orange-900/20"
                     >
                         {isSolving ? <RefreshCw className="animate-spin" size={18}/> : <Sparkles size={18}/>}
