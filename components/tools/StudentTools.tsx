@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { GraduationCap, Trash2, Plus, BookOpen, Copy, CheckCircle, RefreshCw, BookCheck, AlertTriangle, Check, ArrowRight, Sparkles, SlidersHorizontal, StickyNote, FileUp, FileText, FileQuestion, HelpCircle, Image as ImageIcon, X, FileSpreadsheet } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
+import katex from 'katex';
 import { getAiConfig } from '../../utils/ai';
 
 // Fix for PDF.js worker
@@ -15,18 +16,45 @@ try {
 }
 
 // --- Markdown Renderer Component ---
-// Updated for "Textbook Style" - Clean, structured, dark mode friendly
+// Updated to use KaTeX for math rendering
 const MarkdownRenderer = ({ content }: { content: string }) => {
     const processContent = (text: string) => {
         if (!text) return '';
         
-        // 1. Pre-process block math to avoid breaking on newlines
-        const mathBlocks: string[] = [];
+        // 1. Extract and render Block Math $$...$$
+        const blockMath: string[] = [];
         let processedText = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, equation) => {
-            mathBlocks.push(equation);
-            return `__MATH_BLOCK_${mathBlocks.length - 1}__`;
+            try {
+                // Use KaTeX to render
+                const rendered = katex.renderToString(equation, { 
+                    displayMode: true, 
+                    throwOnError: false,
+                    output: 'html'
+                });
+                blockMath.push(`<div class="my-6 flex justify-center overflow-x-auto p-2">${rendered}</div>`);
+                return `__BLOCK_MATH_${blockMath.length - 1}__`;
+            } catch (e) {
+                return match;
+            }
         });
 
+        // 2. Extract and render Inline Math $...$
+        const inlineMath: string[] = [];
+        processedText = processedText.replace(/\$([^$\n]+?)\$/g, (match, equation) => {
+            try {
+                const rendered = katex.renderToString(equation, { 
+                    displayMode: false, 
+                    throwOnError: false,
+                    output: 'html'
+                });
+                inlineMath.push(rendered);
+                return `__INLINE_MATH_${inlineMath.length - 1}__`;
+            } catch (e) {
+                return match;
+            }
+        });
+
+        // 3. Process Markdown Lines
         const lines = processedText.split('\n');
         let html = '';
         let inCodeBlock = false;
@@ -56,32 +84,27 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
 
             // --- Formatting ---
             let formattedLine = cleanLine
-                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                // Math Inline
-                .replace(/\\\((.*?)\\\)/g, '<span class="font-serif italic text-cyan-300 mx-1">$1</span>')
-                .replace(/\$([^$]+)\$/g, '<span class="font-serif italic text-cyan-300 mx-1">$1</span>')
-                // Bold - Highlight Labels like "Problem:" or "Solution:"
+                // Bold
                 .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
                 // Italic
                 .replace(/\*(.*?)\*/g, '<em class="text-gray-400">$1</em>')
                 // Inline Code
                 .replace(/`([^`]+)`/g, '<code class="bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-cyan-400">$1</code>');
 
-            // Restore Math Blocks (Centered, Large)
-            formattedLine = formattedLine.replace(/__MATH_BLOCK_(\d+)__/g, (match, id) => {
-                return `<div class="my-6 text-center"><div class="inline-block px-6 py-3 bg-black/20 rounded-lg border border-white/5 font-serif italic text-xl text-cyan-200 overflow-x-auto max-w-full">$$ ${mathBlocks[parseInt(id)]} $$</div></div>`;
-            });
+            // Restore Math
+            formattedLine = formattedLine.replace(/__BLOCK_MATH_(\d+)__/g, (match, id) => blockMath[parseInt(id)]);
+            formattedLine = formattedLine.replace(/__INLINE_MATH_(\d+)__/g, (match, id) => inlineMath[parseInt(id)]);
 
             // --- Elements ---
-            
-            // Headers (Textbook Examples Style)
+            // Headers
             if (cleanLine.startsWith('### ')) {
-                // Example 1: Title
                 html += `<h3 class="text-lg font-bold text-white mt-8 mb-4 pb-2 border-b border-gray-700 flex items-center gap-2"><span class="w-2 h-2 bg-cyan-500 rounded-full"></span> ${formattedLine.slice(4)}</h3>`;
             } else if (cleanLine.startsWith('## ')) {
                 html += `<h2 class="text-xl font-bold text-white mt-8 mb-4">${formattedLine.slice(3)}</h2>`;
-            } 
-            // Horizontal Rule (Divider)
+            } else if (cleanLine.startsWith('# ')) {
+                html += `<h1 class="text-2xl font-bold text-white mt-8 mb-4">${formattedLine.slice(2)}</h1>`;
+            }
+            // Horizontal Rule
             else if (cleanLine === '---' || cleanLine === '***') {
                 html += `<hr class="my-8 border-gray-700" />`;
             }
@@ -371,15 +394,15 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
 
         try {
             const systemInstruction = `You are a Professional Textbook Content Generator.
-            Subject: ${solverSubject}
+            Subject/Field: ${solverSubject}
             
-            Your goal is to provide an answer that looks EXACTLY like a high-quality textbook example.
+            Your goal is to provide an answer that looks EXACTLY like a high-quality textbook example for this specific field.
             
             STRICT FORMATTING RULES:
             1. Start with a Title Header (Markdown ###) describing the concept.
             2. Use "**Problem:**" followed by the question.
-            3. Use "**Solution:**" followed by a structured, step-by-step derivation.
-            4. Use LaTeX for ALL math equations (enclose in $$ for centered blocks, $ for inline).
+            3. Use "**Solution:**" followed by a structured, step-by-step derivation/explanation.
+            4. Use LaTeX for ALL math equations. Enclose centered block equations in $$ ... $$ and inline equations in $ ... $.
             5. Use "**Answer:**" for the final result.
             6. Use a horizontal rule (---) at the end if there are multiple parts.
             7. Keep the tone academic, neutral, and clear.
@@ -471,12 +494,43 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
         }
     };
 
-    const subjects = [
-        'Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 
-        'Geography', 'Computer Science', 'Literature', 'Economics', 
-        'Business Studies', 'Psychology', 'Philosophy', 'Sociology', 
-        'Political Science', 'General Knowledge'
-    ];
+    const fieldGroups = {
+        'Engineering': [
+            'General Engineering', 'Mechanical Engineering', 'Civil Engineering', 
+            'Electrical Engineering', 'Chemical Engineering', 'Aerospace Engineering', 
+            'Biomedical Engineering', 'Robotics', 'Mechatronics'
+        ],
+        'Computer Science & IT': [
+            'Computer Science', 'Software Engineering', 'Data Science', 
+            'Cybersecurity', 'Artificial Intelligence', 'Web Development', 
+            'Information Systems', 'Networking'
+        ],
+        'Medical & Health': [
+            'Medicine (MBBS/MD)', 'Nursing', 'Pharmacy', 'Dentistry', 
+            'Public Health', 'Veterinary Science', 'Psychiatry', 
+            'Physiotherapy', 'Nutrition'
+        ],
+        'Natural Sciences': [
+            'Physics', 'Chemistry', 'Biology', 'Environmental Science', 
+            'Astronomy', 'Geology', 'Biochemistry', 'Microbiology'
+        ],
+        'Mathematics & Statistics': [
+            'Mathematics', 'Statistics', 'Calculus', 'Algebra', 
+            'Geometry', 'Trigonometry'
+        ],
+        'Business & Economics': [
+            'Business Administration', 'Economics', 'Finance', 'Accounting', 
+            'Marketing', 'Management', 'Entrepreneurship', 'Supply Chain'
+        ],
+        'Humanities & Social Sciences': [
+            'Psychology', 'Sociology', 'Philosophy', 'History', 
+            'Political Science', 'Law', 'Anthropology', 'Geography', 'Education'
+        ],
+        'Arts & Literature': [
+            'Literature', 'Linguistics', 'Architecture', 
+            'Visual Arts', 'Music Theory', 'Performing Arts', 'Graphic Design'
+        ]
+    };
 
     return (
         <div className="flex flex-col items-center max-w-4xl mx-auto w-full">
@@ -735,13 +789,19 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
 
                     {/* Controls */}
                     <div className="mb-6">
-                        <label className="block text-xs text-gray-500 uppercase mb-2">Subject</label>
+                        <label className="block text-xs text-gray-500 uppercase mb-2">Field of Study</label>
                         <select 
                             value={solverSubject} 
                             onChange={(e) => setSolverSubject(e.target.value)}
                             className="w-full bg-black/40 border border-gray-700 text-gray-300 text-sm rounded-lg p-3 outline-none focus:border-orange-500"
                         >
-                            {subjects.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                            {Object.entries(fieldGroups).map(([category, fields]) => (
+                                <optgroup key={category} label={category} className="bg-gray-900 text-gray-400">
+                                    {fields.map(field => (
+                                        <option key={field} value={field} className="text-white bg-gray-900">{field}</option>
+                                    ))}
+                                </optgroup>
+                            ))}
                         </select>
                     </div>
 
