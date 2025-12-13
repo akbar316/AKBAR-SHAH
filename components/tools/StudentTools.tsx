@@ -1,8 +1,8 @@
 
-
 import React, { useState } from 'react';
 import { GraduationCap, Trash2, Plus, BookOpen, Copy, CheckCircle, RefreshCw, BookCheck, AlertTriangle, Check, ArrowRight, Sparkles, SlidersHorizontal, PenTool, StickyNote, FileUp, FileText, FileQuestion, HelpCircle } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
+import { getAiConfig } from '../../utils/ai';
 
 // Fix for PDF.js worker
 const pdfjs = (pdfjsLib as any).default || pdfjsLib;
@@ -58,25 +58,6 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
     const [notesOutput, setNotesOutput] = useState('');
     const [isSummarizing, setIsSummarizing] = useState(false);
 
-    // Helper to safely get API Key from various environment configurations
-    const getApiKey = () => {
-        // @ts-ignore - Handle Vite
-        if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) {
-            // @ts-ignore
-            return import.meta.env.VITE_OPENROUTER_API_KEY;
-        }
-        // @ts-ignore - Handle CRA/Next/Standard
-        if (typeof process !== 'undefined' && process.env) {
-            // @ts-ignore
-            if (process.env.REACT_APP_OPENROUTER_API_KEY) return process.env.REACT_APP_OPENROUTER_API_KEY;
-            // @ts-ignore
-            if (process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-            // @ts-ignore
-            if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
-        }
-        return '';
-    };
-
     // --- PDF Extraction Helper ---
     const extractTextFromPdf = async (file: File): Promise<string> => {
         try {
@@ -129,7 +110,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
             return;
         }
 
-        const apiKey = getApiKey();
+        const { apiKey, model } = getAiConfig();
         if (!apiKey) {
             notify("API Key missing.");
             setNotesOutput("Error: VITE_OPENROUTER_API_KEY missing.");
@@ -156,7 +137,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                     model: "google/gemini-2.0-flash-exp:free",
+                    "model": model,
                     "messages": [
                         { "role": "system", "content": `You are an expert Academic Study Assistant. Task: ${promptInstruction}. Format using Markdown.` },
                         { "role": "user", "content": notesInput }
@@ -186,7 +167,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
             return;
         }
 
-        const apiKey = getApiKey();
+        const { apiKey, model } = getAiConfig();
         if (!apiKey) {
             notify("API Key missing.");
             setQuestionOutput("Error: VITE_OPENROUTER_API_KEY missing.");
@@ -225,7 +206,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    "model": "amazon/nova-2-lite-v1:free",
+                    "model": model,
                     "messages": [
                         { "role": "system", "content": systemInstruction },
                         { "role": "user", "content": questionInput }
@@ -255,7 +236,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
             return;
         }
 
-        const apiKey = getApiKey();
+        const { apiKey, model } = getAiConfig();
         if (!apiKey) {
             notify("API Key missing.");
             setParaphraseOutput("Error: VITE_OPENROUTER_API_KEY missing.");
@@ -283,7 +264,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    "model": "amazon/nova-2-lite-v1:free",
+                    "model": model,
                     "messages": [
                         { "role": "system", "content": systemInstruction },
                         { "role": "user", "content": paraphraseInput }
@@ -313,7 +294,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
             return;
         }
 
-        const apiKey = getApiKey();
+        const { apiKey, model } = getAiConfig();
         if (!apiKey) {
             notify("API Key missing. Cannot connect to AI service.");
             setWriterOutput("Error: VITE_OPENROUTER_API_KEY not found. Please add it to your environment variables to use this feature.");
@@ -341,7 +322,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    "model": "amazon/nova-2-lite-v1:free",
+                    "model": model,
                     "messages": [
                         { "role": "system", "content": systemInstruction },
                         { "role": "user", "content": writerTopic }
@@ -372,7 +353,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
             return;
         }
 
-        const apiKey = getApiKey();
+        const { apiKey, model } = getAiConfig();
         if (!apiKey) {
             notify("API Key missing. Cannot connect to AI service.");
             setGrammarOutput("Error: VITE_OPENROUTER_API_KEY not found. Please add it to your environment variables to use this feature.");
@@ -401,7 +382,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    "model": "amazon/nova-2-lite-v1:free",
+                    "model": model,
                     "messages": [
                         {
                             "role": "system",

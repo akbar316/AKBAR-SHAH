@@ -1,7 +1,7 @@
 
-
 import React, { useState } from 'react';
 import { RefreshCw, Play, Copy, LayoutTemplate, Code, Eye, ExternalLink, Download, Wand2, Calculator, FormInput, Layout, FileCode, Check } from 'lucide-react';
+import { getAiConfig } from '../../utils/ai';
 
 interface DevToolsProps {
   toolId: string;
@@ -18,22 +18,6 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
 
     // Code Formatter State
     const [formatLanguage, setFormatLanguage] = useState('javascript');
-
-    // Helper to safely get API Key
-    const getApiKey = () => {
-        // @ts-ignore
-        if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) return import.meta.env.VITE_OPENROUTER_API_KEY;
-        // @ts-ignore
-        if (typeof process !== 'undefined' && process.env) {
-            // @ts-ignore
-            if (process.env.REACT_APP_OPENROUTER_API_KEY) return process.env.REACT_APP_OPENROUTER_API_KEY;
-            // @ts-ignore
-            if (process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-            // @ts-ignore
-            if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
-        }
-        return '';
-    };
 
     const handleDevAction = async () => {
         try {
@@ -55,7 +39,7 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                 }
             } else if (toolId === 'dev-format') {
                 if (!inputText.trim()) { notify("Please paste code to format."); return; }
-                const apiKey = getApiKey();
+                const { apiKey, model } = getAiConfig();
                 if (!apiKey) { notify("API Key Missing"); setOutputText("Error: VITE_OPENROUTER_API_KEY missing."); return; }
                 
                 setLoading(true);
@@ -64,7 +48,7 @@ export const DevTools: React.FC<DevToolsProps> = ({ toolId, notify }) => {
                         method: "POST",
                         headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            "model": "amazon/nova-2-lite-v1:free",
+                            "model": model,
                             "messages": [
                                 { 
                                     "role": "system", 
@@ -88,7 +72,7 @@ Output ONLY the formatted code (no markdown blocks, no conversational text).`
                 }
             } else if (toolId === 'dev-web-builder') {
                 if (!inputText.trim()) { notify("Please describe your website."); return; }
-                const apiKey = getApiKey();
+                const { apiKey, model } = getAiConfig();
                 if (!apiKey) { notify("API Key Missing"); setOutputText("Error: VITE_OPENROUTER_API_KEY missing. Please add it to Vercel env vars."); return; }
                 
                 setLoading(true);
@@ -97,7 +81,7 @@ Output ONLY the formatted code (no markdown blocks, no conversational text).`
                         method: "POST",
                         headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            "model": "amazon/nova-2-lite-v1:free",
+                            "model": model,
                             "messages": [
                                 { 
                                     "role": "system", 

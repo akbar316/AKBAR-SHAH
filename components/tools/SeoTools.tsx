@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Search, Code, FileText, Type, BarChart3, RefreshCw, Sparkles, BrainCircuit, Copy, Tag, Target } from 'lucide-react';
 import { SubTool } from '../../types';
+import { getAiConfig } from '../../utils/ai';
 
 interface SeoToolsProps {
   toolId: string;
@@ -27,27 +28,8 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ toolId, toolData, notify }) 
     const [showReasoning, setShowReasoning] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // Helper to safely get API Key from various environment configurations
-    const getApiKey = () => {
-        // @ts-ignore - Handle Vite
-        if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) {
-            // @ts-ignore
-            return import.meta.env.VITE_OPENROUTER_API_KEY;
-        }
-        // @ts-ignore - Handle CRA/Next/Standard
-        if (typeof process !== 'undefined' && process.env) {
-            // @ts-ignore
-            if (process.env.REACT_APP_OPENROUTER_API_KEY) return process.env.REACT_APP_OPENROUTER_API_KEY;
-            // @ts-ignore
-            if (process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-            // @ts-ignore
-            if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
-        }
-        return '';
-    };
-
     const fetchSeoInsights = async (prompt: string) => {
-        const apiKey = getApiKey();
+        const { apiKey, model } = getAiConfig();
         
         if (!apiKey) {
             notify("Configuration Error: API Key missing.");
@@ -61,7 +43,11 @@ export const SeoTools: React.FC<SeoToolsProps> = ({ toolId, toolData, notify }) 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ "model": "amazon/nova-2-lite-v1:free", "messages": [{ "role": "user", "content": prompt }], "reasoning": {"enabled": true} })
+                body: JSON.stringify({ 
+                    "model": model, 
+                    "messages": [{ "role": "user", "content": prompt }], 
+                    "reasoning": {"enabled": true} 
+                })
             });
 
             const result = await response.json();

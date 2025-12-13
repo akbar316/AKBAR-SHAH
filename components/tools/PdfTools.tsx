@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Upload, Download, RefreshCw, Scissors, Images, Minimize2, Check, FileText, 
@@ -11,6 +9,7 @@ import { SubTool } from '../../types';
 import * as pdfjsLib from 'pdfjs-dist';
 import { jsPDF } from 'jspdf';
 import { PDFDocument, rgb } from 'pdf-lib';
+import { getAiConfig } from '../../utils/ai';
 
 // Fix for PDF.js worker
 const pdfjs = (pdfjsLib as any).default || pdfjsLib;
@@ -48,25 +47,6 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
   // --- SUMMARIZER STATE ---
   const [summaryOutput, setSummaryOutput] = useState('');
   const [isSummarizing, setIsSummarizing] = useState(false);
-
-  // Helper to safely get API Key
-  const getApiKey = () => {
-    // @ts-ignore - Handle Vite
-    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) {
-        // @ts-ignore
-        return import.meta.env.VITE_OPENROUTER_API_KEY;
-    }
-    // @ts-ignore - Handle CRA/Next/Standard
-    if (typeof process !== 'undefined' && process.env) {
-        // @ts-ignore
-        if (process.env.REACT_APP_OPENROUTER_API_KEY) return process.env.REACT_APP_OPENROUTER_API_KEY;
-        // @ts-ignore
-        if (process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-        // @ts-ignore
-        if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
-    }
-    return '';
-  };
 
   useEffect(() => {
     // Reset state on tool switch
@@ -140,7 +120,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
   const handleSummarizePdf = async () => {
     if (!file) return;
     
-    const apiKey = getApiKey();
+    const { apiKey, model } = getAiConfig();
     if (!apiKey) {
         notify("API Key missing. Add VITE_OPENROUTER_API_KEY.");
         setSummaryOutput("Error: API Key missing in environment variables.");
@@ -157,7 +137,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
             method: "POST",
             headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-                "model": "amazon/nova-2-lite-v1:free",
+                "model": model,
                 "messages": [
                     { "role": "system", "content": "You are a professional Document Summarizer. Summarize the provided text into: 1. A short abstract. 2. Key Bullet Points. 3. Important Takeaways. Format using Markdown." },
                     { "role": "user", "content": text }

@@ -1,8 +1,8 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, Bot, User, Copy, RefreshCw, Cpu, Eraser, Aperture, Download, Code, Briefcase, FileText, Upload, Image as ImageIcon, Eye, CheckCircle, Maximize, Minimize } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
+import { getAiConfig } from '../../utils/ai';
 
 // Fix for PDF.js worker
 const pdfjs = (pdfjsLib as any).default || pdfjsLib;
@@ -64,25 +64,6 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [chatHistory]);
 
-    // Helper to safely get API Key from various environment configurations
-    const getApiKey = () => {
-        // @ts-ignore - Handle Vite
-        if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) {
-            // @ts-ignore
-            return import.meta.env.VITE_OPENROUTER_API_KEY;
-        }
-        // @ts-ignore - Handle CRA/Next/Standard
-        if (typeof process !== 'undefined' && process.env) {
-            // @ts-ignore
-            if (process.env.REACT_APP_OPENROUTER_API_KEY) return process.env.REACT_APP_OPENROUTER_API_KEY;
-            // @ts-ignore
-            if (process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-            // @ts-ignore
-            if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
-        }
-        return '';
-    };
-
     // --- PDF Extraction Helper ---
     const extractTextFromPdf = async (file: File): Promise<string> => {
         try {
@@ -107,11 +88,11 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
 
     // --- Core API Logic ---
     const callOpenRouter = async (messages: ChatMessage[]) => {
-        const apiKey = getApiKey();
+        const { apiKey, model } = getAiConfig();
         
         if (!apiKey) {
-            notify("Error: VITE_OPENROUTER_API_KEY missing.");
-            throw new Error("API Key Missing. Please add VITE_OPENROUTER_API_KEY to Vercel.");
+            notify("Error: API Key missing.");
+            throw new Error("API Key Missing. Please add VITE_OPENROUTER_API_KEY env var.");
         }
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -120,12 +101,10 @@ export const AiTools: React.FC<AiToolsProps> = ({ toolId, notify }) => {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             },
-body: JSON.stringify({
-   model: "google/gemini-2.0-flash-exp:free",
-    "messages": messages
-})
-
-
+            body: JSON.stringify({
+                "model": model,
+                "messages": messages
+            })
         });
 
         if (!response.ok) {
@@ -331,7 +310,7 @@ body: JSON.stringify({
                     <div className="p-4 border-b border-gray-800 bg-gray-950/50 flex justify-between items-center">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>
-                            <span className="text-sm font-medium text-gray-300">gemini-2.0(Online)</span>
+                            <span className="text-sm font-medium text-gray-300">Nova-2 Lite (Online)</span>
                         </div>
                         <button onClick={() => setChatHistory([])} className="text-xs text-gray-500 hover:text-red-400 flex items-center gap-1">
                             <Eraser size={12}/> Clear Chat
@@ -719,7 +698,7 @@ body: JSON.stringify({
 
                     {/* Output */}
                     {(resumeOutput || loading) && (
-                        <div className={`${isFullScreen ? 'fixed inset-0 z-50 m-0 rounded-none w-screen h-screen' : 'flex-1 min-h-[800px] rounded-xl border border-gray-800 shadow-2xl'} bg-gray-950 overflow-hidden relative group flex flex-col transition-all duration-300`}>
+                        <div className={`${isFullScreen ? 'fixed inset-0 z-50 m-0 rounded-none w-screen h-screen' : 'flex-1 min-h-[1123px] rounded-xl border border-gray-800 shadow-2xl'} bg-gray-950 overflow-hidden relative group flex flex-col transition-all duration-300`}>
                             {/* Output Header */}
                             <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm">
                                  <div className="flex items-center gap-2">
