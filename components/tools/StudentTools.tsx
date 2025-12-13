@@ -15,32 +15,30 @@ try {
 }
 
 // --- Markdown Renderer Component ---
-// Improved to handle block math, headers, and lists more cleanly "Book Style"
+// Updated for "Textbook Style" - Clean, structured, dark mode friendly
 const MarkdownRenderer = ({ content }: { content: string }) => {
     const processContent = (text: string) => {
         if (!text) return '';
         
         // 1. Pre-process block math to avoid breaking on newlines
-        // Replace $$ ... $$ with a placeholder
         const mathBlocks: string[] = [];
         let processedText = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, equation) => {
             mathBlocks.push(equation);
             return `__MATH_BLOCK_${mathBlocks.length - 1}__`;
         });
 
-        // 2. Split into lines for markdown processing
         const lines = processedText.split('\n');
         let html = '';
         let inCodeBlock = false;
 
         lines.forEach((line, index) => {
-            let cleanLine = line; 
+            let cleanLine = line.trim();
 
             // Handle Code Blocks
-            if (cleanLine.trim().startsWith('```')) {
+            if (cleanLine.startsWith('```')) {
                 inCodeBlock = !inCodeBlock;
                 html += inCodeBlock 
-                    ? '<div class="bg-[#1e1e1e] p-4 rounded-lg my-4 overflow-x-auto font-mono text-sm text-[#d4d4d4] border border-gray-700 shadow-inner">' 
+                    ? '<div class="bg-black/30 p-4 rounded-lg my-4 overflow-x-auto font-mono text-sm text-gray-300 border border-gray-700">' 
                     : '</div>';
                 return;
             }
@@ -50,72 +48,67 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
                 return;
             }
 
-            cleanLine = cleanLine.trim();
-
-            // Skip empty lines but add spacing
+            // Skip completely empty lines but allow spacing
             if (!cleanLine) {
-                html += '<div class="h-6"></div>'; // Slightly taller for notebook lines
+                html += '<div class="h-4"></div>';
                 return;
             }
 
-            // --- Inline Formatting ---
+            // --- Formatting ---
             let formattedLine = cleanLine
                 .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                // Math Inline \( ... \) or $ ... $
-                .replace(/\\\((.*?)\\\)/g, '<span class="font-serif italic text-[#2d3748] font-semibold mx-1">$1</span>')
-                .replace(/\$([^$]+)\$/g, '<span class="font-serif italic text-[#2d3748] font-semibold mx-1">$1</span>')
-                // Bold **text**
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#2d3748] font-bold">$1</strong>')
-                // Bold __text__
-                .replace(/__(.*?)__/g, '<strong class="text-[#2d3748] font-bold">$1</strong>')
-                // Italic *text*
-                .replace(/\*(.*?)\*/g, '<em class="text-gray-600">$1</em>')
-                // Inline Code `text`
-                .replace(/`([^`]+)`/g, '<code class="bg-gray-200 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800 border border-gray-300">$1</code>');
+                // Math Inline
+                .replace(/\\\((.*?)\\\)/g, '<span class="font-serif italic text-cyan-300 mx-1">$1</span>')
+                .replace(/\$([^$]+)\$/g, '<span class="font-serif italic text-cyan-300 mx-1">$1</span>')
+                // Bold - Highlight Labels like "Problem:" or "Solution:"
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+                // Italic
+                .replace(/\*(.*?)\*/g, '<em class="text-gray-400">$1</em>')
+                // Inline Code
+                .replace(/`([^`]+)`/g, '<code class="bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-cyan-400">$1</code>');
 
-            // Restore Math Blocks
+            // Restore Math Blocks (Centered, Large)
             formattedLine = formattedLine.replace(/__MATH_BLOCK_(\d+)__/g, (match, id) => {
-                return `<div class="font-serif italic text-[#2d3748] text-center my-6 text-xl py-4 bg-white/50 rounded-lg border border-gray-200 shadow-sm overflow-x-auto">$$ ${mathBlocks[parseInt(id)]} $$</div>`;
+                return `<div class="my-6 text-center"><div class="inline-block px-6 py-3 bg-black/20 rounded-lg border border-white/5 font-serif italic text-xl text-cyan-200 overflow-x-auto max-w-full">$$ ${mathBlocks[parseInt(id)]} $$</div></div>`;
             });
 
-            // --- Block Level Elements ---
+            // --- Elements ---
             
-            // Headers
+            // Headers (Textbook Examples Style)
             if (cleanLine.startsWith('### ')) {
-                html += `<h3 class="text-lg font-bold text-[#1a202c] mt-6 mb-3 border-b-2 border-red-300/50 pb-1 inline-block">${formattedLine.slice(4)}</h3>`;
+                // Example 1: Title
+                html += `<h3 class="text-lg font-bold text-white mt-8 mb-4 pb-2 border-b border-gray-700 flex items-center gap-2"><span class="w-2 h-2 bg-cyan-500 rounded-full"></span> ${formattedLine.slice(4)}</h3>`;
             } else if (cleanLine.startsWith('## ')) {
-                html += `<h2 class="text-xl font-bold text-[#1a202c] mt-8 mb-4 border-b-2 border-red-400 pb-1">${formattedLine.slice(3)}</h2>`;
-            } else if (cleanLine.startsWith('# ')) {
-                html += `<h1 class="text-2xl font-extrabold text-[#1a202c] mt-8 mb-6 uppercase tracking-wider underline decoration-red-400 decoration-2 underline-offset-4">${formattedLine.slice(2)}</h1>`;
+                html += `<h2 class="text-xl font-bold text-white mt-8 mb-4">${formattedLine.slice(3)}</h2>`;
             } 
+            // Horizontal Rule (Divider)
+            else if (cleanLine === '---' || cleanLine === '***') {
+                html += `<hr class="my-8 border-gray-700" />`;
+            }
             // Lists
             else if (cleanLine.startsWith('- ') || cleanLine.startsWith('* ')) {
-                html += `<div class="flex items-start gap-3 mb-2 ml-4">
-                            <span class="text-[#2d3748] mt-1.5 text-xs">•</span>
-                            <span class="text-[#2d3748] flex-1 leading-[28px]">${formattedLine.slice(2)}</span>
+                html += `<div class="flex items-start gap-3 mb-2 ml-2">
+                            <span class="text-cyan-500 mt-2 text-[6px]">●</span>
+                            <span class="text-gray-300 flex-1 leading-relaxed">${formattedLine.slice(2)}</span>
                          </div>`;
             } else if (/^\d+\./.test(cleanLine)) {
                 const number = cleanLine.match(/^\d+\./)?.[0];
                 const content = formattedLine.replace(/^\d+\.\s*/, '');
-                html += `<div class="flex items-start gap-3 mb-2 ml-4">
-                            <span class="text-[#2d3748] font-bold min-w-[20px] text-right">${number}</span>
-                            <span class="text-[#2d3748] flex-1 leading-[28px]">${content}</span>
+                html += `<div class="flex items-start gap-3 mb-2 ml-2">
+                            <span class="text-cyan-500 font-bold min-w-[20px] text-right">${number}</span>
+                            <span class="text-gray-300 flex-1 leading-relaxed">${content}</span>
                          </div>`;
-            } 
-            // Blockquotes / Callouts
-            else if (cleanLine.startsWith('> ')) {
-                html += `<div class="border-l-4 border-blue-400 bg-blue-50 p-4 my-4 rounded-r-lg text-gray-700 italic shadow-sm">${formattedLine.slice(2)}</div>`;
             } 
             // Standard Paragraph
             else {
-                html += `<p class="mb-0 leading-[28px] text-[#2d3748]">${formattedLine}</p>`;
+                html += `<p class="mb-2 leading-relaxed text-gray-300">${formattedLine}</p>`;
             }
         });
 
         return html;
     };
 
-    return <div dangerouslySetInnerHTML={{ __html: processContent(content) }} className="markdown-content font-serif text-base" />;
+    return <div dangerouslySetInnerHTML={{ __html: processContent(content) }} className="markdown-content font-sans text-base" />;
 };
 
 interface StudentToolsProps {
@@ -134,7 +127,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
     const [questionOutput, setQuestionOutput] = useState('');
     const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
 
-    // Paraphrasing State (Replaces Plagiarism)
+    // Paraphrasing State
     const [paraphraseInput, setParaphraseInput] = useState('');
     const [paraphraseOutput, setParaphraseOutput] = useState('');
     const [paraphraseMode, setParaphraseMode] = useState('Standard');
@@ -147,7 +140,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
     const [grammarFocus, setGrammarFocus] = useState('Fix Errors');
     const [isImproving, setIsImproving] = useState(false);
 
-    // Homework Solver State (Replaces Writer)
+    // Homework Solver State
     const [solverInput, setSolverInput] = useState('');
     const [solverSubject, setSolverSubject] = useState('Mathematics');
     const [solverOutput, setSolverOutput] = useState('');
@@ -166,7 +159,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjs.getDocument(arrayBuffer).promise;
             let fullText = "";
-            const maxPages = Math.min(pdf.numPages, 15); // Limit to 15 pages for API ease
+            const maxPages = Math.min(pdf.numPages, 15); 
             
             for (let i = 1; i <= maxPages; i++) {
                 const page = await pdf.getPage(i);
@@ -207,68 +200,37 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
 
     // --- Note Summarizer Helpers (AI) ---
     const handleGenerateNotes = async () => {
-        if (!notesInput.trim()) {
-            notify("Please enter text or upload a PDF.");
-            return;
-        }
-
+        if (!notesInput.trim()) { notify("Please enter text."); return; }
         const { apiKey, model } = getAiConfig();
-        if (!apiKey) {
-            notify("API Key missing.");
-            setNotesOutput("Error: VITE_OPENROUTER_API_KEY missing.");
-            return;
-        }
+        if (!apiKey) { notify("API Key missing."); return; }
 
         setIsSummarizing(true);
         setNotesOutput('');
 
         try {
-            // "Expert Educator" System Prompt
-            const systemInstruction = `You are a professional educator and content creator for students. Generate structured, detailed, and student-friendly content for any topic.
-
-Requirements:
-1. Clearly label each section: Question, Step-by-Step Solution, Final Answer, Key Concepts, Common Mistakes, Key Takeaways, Practice Exercises.
-2. For solutions, explain each step thoroughly:
-   - Identify terms or components
-   - Specify which rule or formula applies
-   - Show intermediate steps
-3. Use LaTeX for all mathematical formulas (enclose in $$ for blocks or $ for inline).
-4. Use Markdown headings (###), subheadings, and bullet points to enhance readability.
-5. Include tips, mnemonics, and warnings about common mistakes.
-6. Provide at least one practice exercise with a worked solution.
-7. Arrange steps logically, simplify results, and highlight the final answer.
-8. Output Format: Clean Markdown. Do NOT use code blocks for the main content. Do NOT use unused hashes or brackets.
-
-Task:
-- Subject/Topic: Derived from user input below.
-- Mode: ${notesMode}
-`;
+            const systemInstruction = `You are a professional educator. Generate structured content.
+            Requirements:
+            1. Clear sections: Key Concepts, Detailed Breakdown, Summary.
+            2. Use LaTeX for math ($...$).
+            3. Clean structure.`;
 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json"
-                },
+                headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     "model": model,
                     "messages": [
                         { "role": "system", "content": systemInstruction },
-                        { "role": "user", "content": `INPUT CONTENT:\n${notesInput}` }
+                        { "role": "user", "content": `${notesMode}: ${notesInput}` }
                     ]
                 })
             });
 
-            if (!response.ok) throw new Error("API Request Failed");
             const data = await response.json();
-            const result = data.choices[0]?.message?.content || "Could not generate notes.";
-            setNotesOutput(result);
-            notify("Notes generated successfully!");
-
+            setNotesOutput(data.choices[0]?.message?.content || "Error.");
+            notify("Notes generated!");
         } catch (error) {
-            console.error(error);
             notify("Failed to generate notes.");
-            setNotesOutput("Error connecting to service. Please try again later.");
         } finally {
             setIsSummarizing(false);
         }
@@ -276,51 +238,20 @@ Task:
 
     // --- Question Generator Helpers (AI) ---
     const handleGenerateQuestions = async () => {
-        if (!questionInput.trim()) {
-            notify("Please enter text or upload a PDF.");
-            return;
-        }
-
+        if (!questionInput.trim()) { notify("Please enter text."); return; }
         const { apiKey, model } = getAiConfig();
-        if (!apiKey) {
-            notify("API Key missing.");
-            setQuestionOutput("Error: VITE_OPENROUTER_API_KEY missing.");
-            return;
-        }
+        if (!apiKey) { notify("API Key missing."); return; }
 
         setIsGeneratingQuestions(true);
         setQuestionOutput('');
 
         try {
-            const systemInstruction = `You are a strict Exam Generator.
-            Task: Generate ${questionCount} ${questionType} questions based on the user's text.
-            Difficulty: ${questionDifficulty}.
-            
-            Formatting Rules:
-            1. Use Markdown headers (###) for sections.
-            2. Use bold (**text**) for emphasis.
-            3. If 'Multiple Choice', provide options A, B, C, D for each question.
-            4. Provide an ANSWER KEY section at the very end of the response.
-            5. Use $...$ for inline math and $$...$$ for block equations.
-            6. Keep the layout clean and professional.
-            
-            Example Output Format for MCQ:
-            1. Question text?
-            A) Option
-            B) Option
-            ...
-            
-            ### Answer Key
-            1. A
-            2. C
-            ...`;
+            const systemInstruction = `Generate ${questionCount} ${questionType} questions (${questionDifficulty}).
+            Include Answer Key at the bottom. Use Markdown headers.`;
 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json"
-                },
+                headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     "model": model,
                     "messages": [
@@ -330,16 +261,11 @@ Task:
                 })
             });
 
-            if (!response.ok) throw new Error("API Request Failed");
             const data = await response.json();
-            const result = data.choices[0]?.message?.content || "Could not generate questions.";
-            setQuestionOutput(result);
+            setQuestionOutput(data.choices[0]?.message?.content || "Error.");
             notify("Questions generated!");
-
         } catch (error) {
-            console.error(error);
-            notify("Failed to generate questions.");
-            setQuestionOutput("Error connecting to service. Please try again later.");
+            notify("Failed.");
         } finally {
             setIsGeneratingQuestions(false);
         }
@@ -347,57 +273,31 @@ Task:
 
     // --- Paraphrase Helpers (AI) ---
     const handleParaphrase = async () => {
-        if (!paraphraseInput.trim()) {
-            notify("Please enter text to paraphrase.");
-            return;
-        }
-
+        if (!paraphraseInput.trim()) { notify("Please enter text."); return; }
         const { apiKey, model } = getAiConfig();
-        if (!apiKey) {
-            notify("API Key missing.");
-            setParaphraseOutput("Error: VITE_OPENROUTER_API_KEY missing.");
-            return;
-        }
+        if (!apiKey) { notify("API Key missing."); return; }
 
         setIsParaphrasing(true);
         setParaphraseOutput('');
 
         try {
-            const systemInstruction = `You are an expert Content Rewriter and Paraphrasing Tool.
-            Task: Rewrite the user's text to make it unique and plagiarism-free while maintaining the original meaning.
-            Mode: ${paraphraseMode}
-            
-            Guidelines:
-            - Change vocabulary and sentence structure significantly.
-            - Improve clarity and flow.
-            - Do not omit key information.
-            - Output ONLY the rewritten text. No conversational filler.`;
-
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json"
-                },
+                headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     "model": model,
                     "messages": [
-                        { "role": "system", "content": systemInstruction },
+                        { "role": "system", "content": `Rewrite text. Mode: ${paraphraseMode}. Keep meaning, change words.` },
                         { "role": "user", "content": paraphraseInput }
                     ]
                 })
             });
 
-            if (!response.ok) throw new Error("API Request Failed");
             const data = await response.json();
-            const result = data.choices[0]?.message?.content || "Could not paraphrase content.";
-            setParaphraseOutput(result);
-            notify("Text paraphrased successfully!");
-
+            setParaphraseOutput(data.choices[0]?.message?.content || "Error.");
+            notify("Done!");
         } catch (error) {
-            console.error(error);
-            notify("Failed to paraphrase.");
-            setParaphraseOutput("Error connecting to service. Please try again later.");
+            notify("Failed.");
         } finally {
             setIsParaphrasing(false);
         }
@@ -421,19 +321,38 @@ Task:
         setSolverOutput('');
 
         try {
-            const systemInstruction = `You are a strict, disciplined academic tutor and homework solver.
+            // Updated Prompt for "Textbook Style" Layout
+            const systemInstruction = `You are a Professional Textbook Content Generator.
             Subject: ${solverSubject}
             
-            Your Task:
-            1. Provide a direct, step-by-step answer to the user's question.
-            2. If it is a math/science problem, show the formula, steps, and final answer clearly.
-            3. Use standard LaTeX for equations (e.g. $E=mc^2$).
-            4. Formatting must be "Notebook Style": clean, organized, with no extra conversational filler (e.g., "Here is the answer", "I hope this helps").
-            5. Use bullet points or numbered lists where appropriate.
-            6. Do not use unused markdown symbols like empty brackets or excessive bolding unless necessary for emphasis.
-            7. Keep the tone academic, neutral, and helpful.
+            Your goal is to provide an answer that looks EXACTLY like a high-quality textbook example.
             
-            Structure the response as if it were written perfectly in a student's copybook.`;
+            STRICT FORMATTING RULES:
+            1. Start with a Title Header (Markdown ###) describing the concept (e.g. "### Example 1: Derivative of a Polynomial").
+            2. Use "**Problem:**" followed by the question.
+            3. Use "**Solution:**" followed by a structured, step-by-step derivation.
+            4. Use LaTeX for ALL math equations (enclose in $$ for centered blocks, $ for inline).
+            5. Use "**Answer:**" for the final result.
+            6. If multiple steps are needed, use bullet points or numbered lists.
+            7. Use a horizontal rule (---) at the end if there are multiple parts.
+            8. Keep the tone academic, neutral, and clear. No "Here is your answer" filler.
+            
+            Example Output Layout:
+            ### Example: Calculating Velocity
+            **Problem:** 
+            A car travels 100 meters in 5 seconds. Find the velocity.
+            
+            **Solution:**
+            The formula for velocity is:
+            $$ v = \frac{d}{t} $$
+            
+            Substitute the given values:
+            $$ v = \frac{100m}{5s} $$
+            $$ v = 20 m/s $$
+            
+            **Answer:**
+            $$ v = 20 m/s $$
+            `;
 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
@@ -455,7 +374,7 @@ Task:
             const data = await response.json();
             const result = data.choices[0]?.message?.content || "Could not generate answer.";
             setSolverOutput(result);
-            notify("Answer generated successfully!");
+            notify("Answer generated!");
 
         } catch (error) {
             console.error(error);
@@ -468,65 +387,31 @@ Task:
 
     // --- Grammar Helpers (AI) ---
     const improveText = async () => {
-        if (!grammarInput.trim()) {
-            notify("Please enter text to check.");
-            return;
-        }
-
+        if (!grammarInput.trim()) { notify("Please enter text."); return; }
         const { apiKey, model } = getAiConfig();
-        if (!apiKey) {
-            notify("API Key missing. Cannot connect to AI service.");
-            setGrammarOutput("Error: VITE_OPENROUTER_API_KEY not found. Please add it to your environment variables to use this feature.");
-            return;
-        }
+        if (!apiKey) { notify("API Key missing."); return; }
 
         setIsImproving(true);
         setGrammarOutput('');
 
         try {
-            const systemInstruction = `You are an elite AI Editor. Your task is to rewrite the user's text based on these settings:
-            - Tone: ${grammarTone}
-            - Goal: ${grammarFocus}
-            
-            Guidelines:
-            1. If Goal is 'Fix Errors': Strictly correct grammar, spelling, and punctuation. Maintain original flow.
-            2. If Goal is 'Improve Clarity': Fix errors and rephrase awkward sentences for better readability.
-            3. If Goal is 'Make Concise': Fix errors and condense the text by removing fluff.
-            4. Adjust vocabulary to match the requested Tone (${grammarTone}).
-            5. Return ONLY the corrected text. Do NOT add conversational filler or explanations.`;
-
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json"
-                },
+                headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     "model": model,
                     "messages": [
-                        {
-                            "role": "system",
-                            "content": systemInstruction
-                        },
-                        {
-                            "role": "user",
-                            "content": grammarInput
-                        }
+                        { "role": "system", "content": `Fix grammar. Tone: ${grammarTone}. Goal: ${grammarFocus}.` },
+                        { "role": "user", "content": grammarInput }
                     ]
                 })
             });
 
-            if (!response.ok) throw new Error("API Request Failed");
-
             const data = await response.json();
-            const improved = data.choices[0]?.message?.content || "Could not improve text.";
-            setGrammarOutput(improved);
-            notify("Text processed successfully!");
-
+            setGrammarOutput(data.choices[0]?.message?.content || "Error.");
+            notify("Done!");
         } catch (error) {
-            console.error(error);
-            notify("Failed to process text.");
-            setGrammarOutput("Error connecting to the service. Please try again later.");
+            notify("Failed.");
         } finally {
             setIsImproving(false);
         }
@@ -827,11 +712,11 @@ Task:
                         {isSolving ? 'Solving...' : 'Get Answer'}
                     </button>
 
-                    {/* Notebook Style Output */}
+                    {/* Textbook Style Output */}
                     {(solverOutput || isSolving) && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex justify-between items-center mb-3">
-                                <h4 className="text-sm font-medium text-gray-400 uppercase">Disciplined Answer</h4>
+                                <h4 className="text-sm font-medium text-gray-400 uppercase">Textbook Solution</h4>
                                 {solverOutput && (
                                     <button onClick={() => {navigator.clipboard.writeText(solverOutput); notify("Answer Copied!");}} className="text-xs text-orange-400 hover:text-white flex items-center gap-1">
                                         <Copy size={12}/> Copy
@@ -839,21 +724,15 @@ Task:
                                 )}
                             </div>
                             
-                            {/* Notebook Paper CSS styling */}
+                            {/* Textbook Page Styling - Dark Mode Clean */}
                             <div 
-                                className="relative rounded-xl overflow-hidden shadow-2xl"
-                                style={{
-                                    backgroundColor: '#f8f9fa',
-                                    backgroundImage: 'linear-gradient(#e2e8f0 1px, transparent 1px)',
-                                    backgroundSize: '100% 32px',
-                                    borderLeft: '6px solid #f87171', // Red margin line
-                                }}
+                                className="relative rounded-xl overflow-hidden shadow-2xl bg-[#1e1e1e] border border-gray-700"
                             >
-                                <div className="p-8 pt-2 leading-[32px]">
+                                <div className="p-8 leading-[32px]">
                                     {isSolving ? (
                                         <div className="flex flex-col items-center justify-center py-12 gap-4">
                                             <RefreshCw className="animate-spin text-gray-400" size={32}/>
-                                            <p className="text-gray-500 font-serif italic">Thinking step-by-step...</p>
+                                            <p className="text-gray-500 font-sans">Calculating solution...</p>
                                         </div>
                                     ) : (
                                         <MarkdownRenderer content={solverOutput} />
