@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { GraduationCap, Trash2, Plus, BookOpen, Copy, CheckCircle, RefreshCw, BookCheck, AlertTriangle, Check, ArrowRight, Sparkles, SlidersHorizontal, PenTool, StickyNote, FileUp, FileText, FileQuestion, HelpCircle } from 'lucide-react';
+import { GraduationCap, Trash2, Plus, BookOpen, Copy, CheckCircle, RefreshCw, BookCheck, AlertTriangle, Check, ArrowRight, Sparkles, SlidersHorizontal, StickyNote, FileUp, FileText, FileQuestion, HelpCircle } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { getAiConfig } from '../../utils/ai';
 
@@ -54,7 +54,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
 
             // Skip empty lines but add spacing
             if (!cleanLine) {
-                html += '<div class="h-4"></div>';
+                html += '<div class="h-6"></div>'; // Slightly taller for notebook lines
                 return;
             }
 
@@ -62,60 +62,60 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
             let formattedLine = cleanLine
                 .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
                 // Math Inline \( ... \) or $ ... $
-                .replace(/\\\((.*?)\\\)/g, '<span class="font-serif italic text-cyan-300 mx-1">$1</span>')
-                .replace(/\$([^$]+)\$/g, '<span class="font-serif italic text-cyan-300 mx-1">$1</span>')
+                .replace(/\\\((.*?)\\\)/g, '<span class="font-serif italic text-[#2d3748] font-semibold mx-1">$1</span>')
+                .replace(/\$([^$]+)\$/g, '<span class="font-serif italic text-[#2d3748] font-semibold mx-1">$1</span>')
                 // Bold **text**
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#2d3748] font-bold">$1</strong>')
                 // Bold __text__
-                .replace(/__(.*?)__/g, '<strong class="text-white font-bold">$1</strong>')
+                .replace(/__(.*?)__/g, '<strong class="text-[#2d3748] font-bold">$1</strong>')
                 // Italic *text*
-                .replace(/\*(.*?)\*/g, '<em class="text-gray-300">$1</em>')
+                .replace(/\*(.*?)\*/g, '<em class="text-gray-600">$1</em>')
                 // Inline Code `text`
-                .replace(/`([^`]+)`/g, '<code class="bg-gray-800/80 px-1.5 py-0.5 rounded text-sm font-mono text-orange-300 border border-gray-700">$1</code>');
+                .replace(/`([^`]+)`/g, '<code class="bg-gray-200 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800 border border-gray-300">$1</code>');
 
             // Restore Math Blocks
             formattedLine = formattedLine.replace(/__MATH_BLOCK_(\d+)__/g, (match, id) => {
-                return `<div class="font-serif italic text-cyan-300 text-center my-6 text-xl py-4 bg-gray-900/50 rounded-lg border border-gray-800/50 shadow-sm overflow-x-auto">$$ ${mathBlocks[parseInt(id)]} $$</div>`;
+                return `<div class="font-serif italic text-[#2d3748] text-center my-6 text-xl py-4 bg-white/50 rounded-lg border border-gray-200 shadow-sm overflow-x-auto">$$ ${mathBlocks[parseInt(id)]} $$</div>`;
             });
 
             // --- Block Level Elements ---
             
             // Headers
             if (cleanLine.startsWith('### ')) {
-                html += `<h3 class="text-lg font-bold text-orange-400 mt-6 mb-3 flex items-center gap-2"><span class="w-1 h-4 bg-orange-500 rounded-full inline-block"></span>${formattedLine.slice(4)}</h3>`;
+                html += `<h3 class="text-lg font-bold text-[#1a202c] mt-6 mb-3 border-b-2 border-red-300/50 pb-1 inline-block">${formattedLine.slice(4)}</h3>`;
             } else if (cleanLine.startsWith('## ')) {
-                html += `<h2 class="text-xl font-bold text-white mt-8 mb-4 border-b border-gray-800 pb-2">${formattedLine.slice(3)}</h2>`;
+                html += `<h2 class="text-xl font-bold text-[#1a202c] mt-8 mb-4 border-b-2 border-red-400 pb-1">${formattedLine.slice(3)}</h2>`;
             } else if (cleanLine.startsWith('# ')) {
-                html += `<h1 class="text-2xl font-extrabold text-white mt-8 mb-6 tracking-tight">${formattedLine.slice(2)}</h1>`;
+                html += `<h1 class="text-2xl font-extrabold text-[#1a202c] mt-8 mb-6 uppercase tracking-wider underline decoration-red-400 decoration-2 underline-offset-4">${formattedLine.slice(2)}</h1>`;
             } 
             // Lists
             else if (cleanLine.startsWith('- ') || cleanLine.startsWith('* ')) {
-                html += `<div class="flex items-start gap-3 mb-2 ml-1">
-                            <span class="text-orange-500 mt-1.5 text-xs">●</span>
-                            <span class="text-gray-300 flex-1 leading-relaxed">${formattedLine.slice(2)}</span>
+                html += `<div class="flex items-start gap-3 mb-2 ml-4">
+                            <span class="text-[#2d3748] mt-1.5 text-xs">•</span>
+                            <span class="text-[#2d3748] flex-1 leading-[28px]">${formattedLine.slice(2)}</span>
                          </div>`;
             } else if (/^\d+\./.test(cleanLine)) {
                 const number = cleanLine.match(/^\d+\./)?.[0];
                 const content = formattedLine.replace(/^\d+\.\s*/, '');
-                html += `<div class="flex items-start gap-3 mb-2 ml-1">
-                            <span class="text-orange-500 font-mono font-bold min-w-[20px] text-right">${number}</span>
-                            <span class="text-gray-300 flex-1 leading-relaxed">${content}</span>
+                html += `<div class="flex items-start gap-3 mb-2 ml-4">
+                            <span class="text-[#2d3748] font-bold min-w-[20px] text-right">${number}</span>
+                            <span class="text-[#2d3748] flex-1 leading-[28px]">${content}</span>
                          </div>`;
             } 
             // Blockquotes / Callouts
             else if (cleanLine.startsWith('> ')) {
-                html += `<div class="border-l-4 border-orange-500 bg-gray-900/50 p-4 my-4 rounded-r-lg text-gray-300 italic shadow-sm">${formattedLine.slice(2)}</div>`;
+                html += `<div class="border-l-4 border-blue-400 bg-blue-50 p-4 my-4 rounded-r-lg text-gray-700 italic shadow-sm">${formattedLine.slice(2)}</div>`;
             } 
             // Standard Paragraph
             else {
-                html += `<p class="mb-3 leading-relaxed text-gray-300">${formattedLine}</p>`;
+                html += `<p class="mb-0 leading-[28px] text-[#2d3748]">${formattedLine}</p>`;
             }
         });
 
         return html;
     };
 
-    return <div dangerouslySetInnerHTML={{ __html: processContent(content) }} className="markdown-content font-sans text-base" />;
+    return <div dangerouslySetInnerHTML={{ __html: processContent(content) }} className="markdown-content font-serif text-base" />;
 };
 
 interface StudentToolsProps {
@@ -147,13 +147,11 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ toolId, notify }) =>
     const [grammarFocus, setGrammarFocus] = useState('Fix Errors');
     const [isImproving, setIsImproving] = useState(false);
 
-    // Writer State
-    const [writerTopic, setWriterTopic] = useState('');
-    const [writerType, setWriterType] = useState('Essay');
-    const [writerTone, setWriterTone] = useState('Academic');
-    const [writerLength, setWriterLength] = useState('Medium');
-    const [writerOutput, setWriterOutput] = useState('');
-    const [isWriting, setIsWriting] = useState(false);
+    // Homework Solver State (Replaces Writer)
+    const [solverInput, setSolverInput] = useState('');
+    const [solverSubject, setSolverSubject] = useState('Mathematics');
+    const [solverOutput, setSolverOutput] = useState('');
+    const [isSolving, setIsSolving] = useState(false);
 
     // Lecture Notes State
     const [notesInput, setNotesInput] = useState('');
@@ -405,33 +403,37 @@ Task:
         }
     };
 
-    // --- Writer Helpers (AI) ---
-    const handleWrite = async () => {
-        if (!writerTopic.trim()) {
-            notify("Please enter a topic or prompt.");
+    // --- Homework Solver Helpers (AI) ---
+    const handleSolveHomework = async () => {
+        if (!solverInput.trim()) {
+            notify("Please enter a question.");
             return;
         }
 
         const { apiKey, model } = getAiConfig();
         if (!apiKey) {
             notify("API Key missing. Cannot connect to AI service.");
-            setWriterOutput("Error: VITE_OPENROUTER_API_KEY not found. Please add it to your environment variables to use this feature.");
+            setSolverOutput("Error: VITE_OPENROUTER_API_KEY not found. Please add it to your environment variables to use this feature.");
             return;
         }
 
-        setIsWriting(true);
-        setWriterOutput('');
+        setIsSolving(true);
+        setSolverOutput('');
 
         try {
-            const systemInstruction = `You are an elite Academic AI Writer. 
-            Task: Write a ${writerLength} ${writerType} about the user's topic.
-            Settings:
-            - Tone: ${writerTone}
-            - Structure: Well-organized with clear introduction, body paragraphs, and conclusion (if applicable).
-            - Style: Use transition words and vocabulary suitable for the selected tone.
+            const systemInstruction = `You are a strict, disciplined academic tutor and homework solver.
+            Subject: ${solverSubject}
             
-            Format your response with proper Markdown (e.g. ### Headings, **bold**, etc).
-            Do not include conversational filler like "Here is your essay". Start directly with the content.`;
+            Your Task:
+            1. Provide a direct, step-by-step answer to the user's question.
+            2. If it is a math/science problem, show the formula, steps, and final answer clearly.
+            3. Use standard LaTeX for equations (e.g. $E=mc^2$).
+            4. Formatting must be "Notebook Style": clean, organized, with no extra conversational filler (e.g., "Here is the answer", "I hope this helps").
+            5. Use bullet points or numbered lists where appropriate.
+            6. Do not use unused markdown symbols like empty brackets or excessive bolding unless necessary for emphasis.
+            7. Keep the tone academic, neutral, and helpful.
+            
+            Structure the response as if it were written perfectly in a student's copybook.`;
 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
@@ -443,7 +445,7 @@ Task:
                     "model": model,
                     "messages": [
                         { "role": "system", "content": systemInstruction },
-                        { "role": "user", "content": writerTopic }
+                        { "role": "user", "content": solverInput }
                     ]
                 })
             });
@@ -451,16 +453,16 @@ Task:
             if (!response.ok) throw new Error("API Request Failed");
 
             const data = await response.json();
-            const result = data.choices[0]?.message?.content || "Could not generate content.";
-            setWriterOutput(result);
-            notify("Draft generated successfully!");
+            const result = data.choices[0]?.message?.content || "Could not generate answer.";
+            setSolverOutput(result);
+            notify("Answer generated successfully!");
 
         } catch (error) {
             console.error(error);
-            notify("Failed to generate content.");
-            setWriterOutput("Error connecting to the service. Please try again later.");
+            notify("Failed to generate answer.");
+            setSolverOutput("Error connecting to the service. Please try again later.");
         } finally {
-            setIsWriting(false);
+            setIsSolving(false);
         }
     };
 
@@ -529,6 +531,13 @@ Task:
             setIsImproving(false);
         }
     };
+
+    const subjects = [
+        'Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 
+        'Geography', 'Computer Science', 'Literature', 'Economics', 
+        'Business Studies', 'Psychology', 'Philosophy', 'Sociology', 
+        'Political Science', 'General Knowledge'
+    ];
 
     return (
         <div className="flex flex-col items-center max-w-4xl mx-auto w-full">
@@ -781,86 +790,74 @@ Task:
                  </div>
             )}
 
-            {toolId === 'student-writer' && (
+            {toolId === 'student-solver' && (
                 <div className="w-full bg-gray-900 p-6 md:p-8 rounded-xl border border-gray-800 shadow-xl">
-                    <h3 className="text-xl font-bold flex items-center gap-2 mb-6"><PenTool className="text-orange-400"/> AI Essay & Assignment Writer</h3>
+                    <h3 className="text-xl font-bold flex items-center gap-2 mb-6"><BookOpen className="text-orange-400"/> AI Homework Solver</h3>
 
                     {/* Controls */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div>
-                            <label className="block text-xs text-gray-500 uppercase mb-2">Content Type</label>
-                            <select 
-                                value={writerType} 
-                                onChange={(e) => setWriterType(e.target.value)}
-                                className="w-full bg-black/40 border border-gray-700 text-gray-300 text-sm rounded-lg p-2.5 outline-none focus:border-orange-500"
-                            >
-                                <option>Essay</option>
-                                <option>Assignment</option>
-                                <option>Report</option>
-                                <option>Paragraph</option>
-                                <option>Summary</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-xs text-gray-500 uppercase mb-2">Tone</label>
-                            <select 
-                                value={writerTone} 
-                                onChange={(e) => setWriterTone(e.target.value)}
-                                className="w-full bg-black/40 border border-gray-700 text-gray-300 text-sm rounded-lg p-2.5 outline-none focus:border-orange-500"
-                            >
-                                <option>Academic</option>
-                                <option>Professional</option>
-                                <option>Persuasive</option>
-                                <option>Creative</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-xs text-gray-500 uppercase mb-2">Length</label>
-                            <select 
-                                value={writerLength} 
-                                onChange={(e) => setWriterLength(e.target.value)}
-                                className="w-full bg-black/40 border border-gray-700 text-gray-300 text-sm rounded-lg p-2.5 outline-none focus:border-orange-500"
-                            >
-                                <option value="Short">Short (~250 words)</option>
-                                <option value="Medium">Medium (~500 words)</option>
-                                <option value="Long">Long (~1000 words)</option>
-                            </select>
-                        </div>
+                    <div className="mb-6">
+                        <label className="block text-xs text-gray-500 uppercase mb-2">Subject</label>
+                        <select 
+                            value={solverSubject} 
+                            onChange={(e) => setSolverSubject(e.target.value)}
+                            className="w-full bg-black/40 border border-gray-700 text-gray-300 text-sm rounded-lg p-3 outline-none focus:border-orange-500"
+                        >
+                            {subjects.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                        </select>
                     </div>
 
                     {/* Input */}
                     <div className="mb-6">
-                        <label className="block text-xs text-gray-500 uppercase mb-2">Topic or Prompt</label>
+                        <label className="block text-xs text-gray-500 uppercase mb-2">Your Question</label>
                         <textarea
-                            value={writerTopic}
-                            onChange={(e) => setWriterTopic(e.target.value)}
-                            placeholder="e.g. The impact of artificial intelligence on modern education..."
-                            className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white resize-none focus:border-orange-500 outline-none h-32"
+                            value={solverInput}
+                            onChange={(e) => setSolverInput(e.target.value)}
+                            placeholder="Type your question or problem here. e.g., 'Solve for x: 2x + 5 = 15' or 'Explain Photosynthesis step-by-step'."
+                            className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 text-white resize-none focus:border-orange-500 outline-none h-32 custom-scrollbar"
                         />
                     </div>
 
                     {/* Button */}
                     <button 
-                        onClick={handleWrite} 
-                        disabled={isWriting || !writerTopic.trim()}
+                        onClick={handleSolveHomework} 
+                        disabled={isSolving || !solverInput.trim()}
                         className="w-full bg-orange-600 hover:bg-orange-500 disabled:opacity-50 py-3 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-2 mb-8 shadow-lg shadow-orange-900/20"
                     >
-                        {isWriting ? <RefreshCw className="animate-spin" size={18}/> : <Sparkles size={18}/>}
-                        {isWriting ? 'Generating Draft...' : 'Generate Content'}
+                        {isSolving ? <RefreshCw className="animate-spin" size={18}/> : <Sparkles size={18}/>}
+                        {isSolving ? 'Solving...' : 'Get Answer'}
                     </button>
 
-                    {/* Output */}
-                    {(writerOutput) && (
+                    {/* Notebook Style Output */}
+                    {(solverOutput || isSolving) && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex justify-between items-center mb-3">
-                                <h4 className="text-sm font-medium text-gray-400 uppercase">Generated Draft</h4>
-                                <button onClick={() => {navigator.clipboard.writeText(writerOutput); notify("Draft Copied!");}} className="text-xs text-orange-400 hover:text-white flex items-center gap-1">
-                                    <Copy size={12}/> Copy Text
-                                </button>
+                                <h4 className="text-sm font-medium text-gray-400 uppercase">Disciplined Answer</h4>
+                                {solverOutput && (
+                                    <button onClick={() => {navigator.clipboard.writeText(solverOutput); notify("Answer Copied!");}} className="text-xs text-orange-400 hover:text-white flex items-center gap-1">
+                                        <Copy size={12}/> Copy
+                                    </button>
+                                )}
                             </div>
-                            <div className="bg-[#0a0e14] rounded-xl border border-gray-800 p-6 relative overflow-hidden">
-                                <div className="whitespace-pre-wrap font-serif text-gray-300 leading-relaxed text-lg">
-                                    <MarkdownRenderer content={writerOutput} />
+                            
+                            {/* Notebook Paper CSS styling */}
+                            <div 
+                                className="relative rounded-xl overflow-hidden shadow-2xl"
+                                style={{
+                                    backgroundColor: '#f8f9fa',
+                                    backgroundImage: 'linear-gradient(#e2e8f0 1px, transparent 1px)',
+                                    backgroundSize: '100% 32px',
+                                    borderLeft: '6px solid #f87171', // Red margin line
+                                }}
+                            >
+                                <div className="p-8 pt-2 leading-[32px]">
+                                    {isSolving ? (
+                                        <div className="flex flex-col items-center justify-center py-12 gap-4">
+                                            <RefreshCw className="animate-spin text-gray-400" size={32}/>
+                                            <p className="text-gray-500 font-serif italic">Thinking step-by-step...</p>
+                                        </div>
+                                    ) : (
+                                        <MarkdownRenderer content={solverOutput} />
+                                    )}
                                 </div>
                             </div>
                         </div>

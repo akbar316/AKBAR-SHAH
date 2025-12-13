@@ -1,5 +1,4 @@
 
-
 import { 
   FileText, 
   Files, 
@@ -131,7 +130,7 @@ export const TOOLS_DATA: ToolCategory[] = [
     shadowColor: 'shadow-orange-500/20',
     subTools: [
       { id: 'student-notes', name: 'Lecture Notes', icon: StickyNote },
-      { id: 'student-writer', name: 'Essay Writer', icon: PenTool },
+      { id: 'student-solver', name: 'Homework Solver', icon: BookOpen },
       { id: 'student-questions', name: 'Question Gen', icon: FileQuestion },
       { id: 'student-paraphrase', name: 'Paraphraser', icon: RefreshCw },
       { id: 'student-grammar', name: 'Grammar Check', icon: BookCheck },
@@ -470,32 +469,32 @@ export const SEO_DATA: Record<string, SeoData> = {
         { q: 'Can it read scanned PDFs?', a: 'It works best with text-based PDFs. Scanned images may not be read accurately.' }
       ]
     },
-    relatedTools: ['student-writer', 'ai-summarizer', 'student-paraphrase']
+    relatedTools: ['student-solver', 'ai-summarizer', 'student-paraphrase']
   },
-  'student-writer': {
-    title: 'Free AI Essay Writer & Assignment Generator',
-    description: 'Generate essays, assignments, reports, and summaries instantly with AI. Best free online writing assistant for students.',
-    h1: 'AI Essay & Assignment Writer',
+  'student-solver': {
+    title: 'AI Homework Solver & Question Answerer',
+    description: 'Get disciplined, step-by-step answers for any subject. Solves Math, Physics, Chemistry, and more with clean formatting.',
+    h1: 'AI Homework & Question Solver',
     content: {
-      what: 'An intelligent AI writing tool that helps students generate high-quality essays, assignments, reports, and summaries on any topic.',
-      why: 'Overcome writer\'s block and save time. Whether you need a 5-paragraph essay or a research report structure, this tool creates a solid draft instantly.',
+      what: 'An intelligent tutoring assistant that solves homework questions and explains concepts in a disciplined, clean format. It covers all major academic subjects.',
+      why: 'Stuck on a math problem or need a clear definition for a science term? Get direct, distraction-free answers that mimic a well-written notebook entry.',
       how: [
-        'Select the type of content (Essay, Report, etc.).',
-        'Enter your topic or prompt.',
-        'Choose the desired tone and length.',
-        'Click "Generate Content" to get your draft.'
+        'Select your subject (Math, Physics, History, etc.).',
+        'Type your question.',
+        'Click "Get Answer".',
+        'View the clean, structured solution.'
       ],
       features: [
-        'Generates Essays, Reports, & Summaries.',
-        'Adjustable Academic Tones.',
-        'Structured outputs with headers.',
-        'Instant draft generation.'
+        'Step-by-step Math solutions.',
+        'Notebook-style display.',
+        'Supports all major subjects.',
+        'Clean output without clutter.'
       ],
       faq: [
-        { q: 'Is it plagiarism-free?', a: 'The AI generates unique content, but you should always review and cite sources properly.' }
+        { q: 'Is it accurate?', a: 'Yes, it uses advanced AI to provide academic-standard answers.' }
       ]
     },
-    relatedTools: ['student-grammar', 'student-questions', 'student-paraphrase']
+    relatedTools: ['student-grammar', 'student-questions', 'student-notes']
   },
   'student-grammar': {
     title: 'Grammar Checker Online Free - Correct Grammar & Spelling',
@@ -545,7 +544,7 @@ export const SEO_DATA: Record<string, SeoData> = {
         { q: 'Is it free?', a: 'Yes, our paraphraser is free to use.' }
       ]
     },
-    relatedTools: ['student-grammar', 'student-writer', 'text-counter']
+    relatedTools: ['student-grammar', 'student-solver', 'text-counter']
   },
   'student-questions': {
     title: 'AI Question Generator - Create MCQs & Short Questions',
@@ -670,7 +669,7 @@ export const SEO_DATA: Record<string, SeoData> = {
         { q: 'Is it free?', a: 'Yes, you can generate unlimited drafts.' }
       ]
     },
-    relatedTools: ['ai-chat', 'student-writer', 'text-counter']
+    relatedTools: ['ai-chat', 'student-solver', 'text-counter']
   },
   'ai-prompt': {
     title: 'AI Prompt Generator - Improve Midjourney Prompts',
