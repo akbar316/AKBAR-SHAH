@@ -63,7 +63,7 @@ export const TOOLS_DATA: ToolCategory[] = [
     subTools: [
       { id: 'pdf-summary', name: 'PDF Summarizer', icon: Sparkles },
       { id: 'pdf-editable', name: 'PDF to Word/Excel', icon: FileText },
-      { id: 'pdf-image', name: 'Image to PDF', icon: Images },
+      { id: 'pdf-image', name: 'PDF ↔ Image', icon: Images },
       { id: 'pdf-compress', name: 'Compress PDF', icon: Minimize2 },
       { id: 'pdf-merge-split', name: 'Split & Merge', icon: Layers },
     ]
@@ -269,26 +269,27 @@ export const SEO_DATA: Record<string, SeoData> = {
     relatedTools: ['pdf-merge-split', 'pdf-editable', 'img-resize']
   },
   'pdf-image': {
-    title: 'Image to PDF Converter - JPG to PDF Online',
-    description: 'Convert JPG, PNG, and other images to PDF online for free. Create a single PDF document from multiple photos instantly.',
-    h1: 'Image to PDF Converter',
+    title: 'Image to PDF & PDF to Image Converter',
+    description: 'Convert JPG/PNG to PDF or turn PDF pages into images. Bidirectional converter for all your document needs.',
+    h1: 'PDF ↔ Image Converter',
     content: {
-      what: 'A simple tool to convert image files (JPG, PNG, WEBP) into a professional PDF document. You can also extract images from a PDF.',
-      why: 'Perfect for creating portfolios, sharing scanned receipts, or compiling photos into a single shareable file.',
+      what: 'A versatile dual-mode tool. Convert multiple images (JPG, PNG, WEBP) into a single PDF document, OR extract pages from a PDF and save them as high-quality images.',
+      why: 'Perfect for creating portfolios, digitizing receipts, or extracting visual content from reports for social media.',
       how: [
-        'Select "Images to PDF".',
-        'Upload one or more images.',
-        'Click "Generate PDF".',
-        'Your images will be compiled into a single document.'
+        'Select mode: "Image to PDF" or "PDF to Image".',
+        'Upload your file(s).',
+        'For Images: Reorder if needed and click "Convert".',
+        'For PDF: Click "Convert Pages" to generate images.',
+        'Download the result.'
       ],
       features: [
-        'Supports multiple images.',
-        'Maintains original image quality.',
-        'Fast and private.',
-        'Reverse conversion (PDF to Image) supported.'
+        'Bidirectional conversion.',
+        'Bulk image uploading.',
+        'Extracts high-quality JPGs.',
+        'Private client-side processing.'
       ],
       faq: [
-        { q: 'Can I reorder images?', a: 'Yes, upload them in order or delete and re-add to organize.' }
+        { q: 'Can I download all images at once?', a: 'Yes, when converting PDF to Images, you can download a ZIP file containing all pages.' }
       ]
     },
     relatedTools: ['pdf-editable', 'img-resize', 'pdf-compress']

@@ -3,12 +3,13 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Upload, Download, RefreshCw, Scissors, Images, Minimize2, Check, FileText, 
   Image as ImageIcon, Trash2, ArrowRight, Layers, Move, Plus, Type, 
-  X, ZoomIn, ZoomOut, Maximize, FileSpreadsheet, File, Sparkles, Copy, FileUp
+  X, ZoomIn, ZoomOut, Maximize, FileSpreadsheet, File as FileIcon, Sparkles, Copy, FileUp
 } from 'lucide-react';
 import { SubTool } from '../../types';
 import * as pdfjsLib from 'pdfjs-dist';
 import { jsPDF } from 'jspdf';
 import { PDFDocument, rgb } from 'pdf-lib';
+import JSZip from 'jszip';
 import { getAiConfig } from '../../utils/ai';
 
 // Fix for PDF.js worker
@@ -41,6 +42,12 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
   const [previewPages, setPreviewPages] = useState<string[]>([]);
   const [mergeFiles, setMergeFiles] = useState<File[]>([]);
   
+  // --- IMAGE TO PDF & PDF TO IMAGE STATE ---
+  const [imgFiles, setImgFiles] = useState<File[]>([]);
+  const [imgPreviews, setImgPreviews] = useState<string[]>([]);
+  const [conversionMode, setConversionMode] = useState<'imageToPdf' | 'pdfToImage'>('imageToPdf');
+  const [pdfImages, setPdfImages] = useState<string[]>([]); // Generated images from PDF
+
   // --- EDITABLE CONVERTER STATE ---
   const [editableFormat, setEditableFormat] = useState<'word' | 'excel' | 'text'>('word');
   
@@ -57,6 +64,9 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
     setPreviewPages([]);
     setSummaryOutput('');
     setIsSummarizing(false);
+    setImgFiles([]);
+    setImgPreviews([]);
+    setPdfImages([]);
   }, [toolId]);
 
   const loadPdf = async (f: File) => {
@@ -67,7 +77,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
       setPdfDoc(pdf);
       setFile(f);
 
-      // If Split Mode, generate previews
+      // If Split Mode, generate thumbnails
       if (toolId === 'pdf-merge-split' && mergeSplitMode === 'split') {
           const previews = [];
           for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
@@ -161,30 +171,63 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
   };
 
 
-  const handleMerge = async () => { /* ... existing logic ... */ 
+  const handleMerge = async () => {
       if (mergeFiles.length < 2) return notify("Select 2+ files");
       setIsProcessing(true);
-      const mergedPdf = await PDFDocument.create();
-      for (const f of mergeFiles) {
-          const doc = await PDFDocument.load(await f.arrayBuffer());
-          const copied = await mergedPdf.copyPages(doc, doc.getPageIndices());
-          copied.forEach(p => mergedPdf.addPage(p));
+      try {
+          const mergedPdf = await PDFDocument.create();
+          for (const f of mergeFiles) {
+              const arrayBuffer = await f.arrayBuffer();
+              const doc = await PDFDocument.load(arrayBuffer);
+              const copiedPages = await mergedPdf.copyPages(doc, doc.getPageIndices());
+              copiedPages.forEach((page) => mergedPdf.addPage(page));
+          }
+          const pdfBytes = await mergedPdf.save();
+          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'merged.pdf';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+      } catch (e) {
+          console.error(e);
+          notify("Merge failed");
+      } finally {
+          setIsProcessing(false);
       }
-      const b = await mergedPdf.save();
-      const l = document.createElement('a'); l.href=URL.createObjectURL(new Blob([b],{type:'application/pdf'})); l.download=`merged.pdf`; l.click();
-      setIsProcessing(false);
   };
 
-  const handleSplit = async () => { /* ... existing logic ... */ 
+  const handleSplit = async () => {
        if (!file || !splitPages.length) return notify("Select pages");
        setIsProcessing(true);
-       const src = await PDFDocument.load(await file.arrayBuffer());
-       const newDoc = await PDFDocument.create();
-       const copied = await newDoc.copyPages(src, splitPages.map(p=>p-1));
-       copied.forEach(p=>newDoc.addPage(p));
-       const b = await newDoc.save();
-       const l = document.createElement('a'); l.href=URL.createObjectURL(new Blob([b],{type:'application/pdf'})); l.download=`split.pdf`; l.click();
-       setIsProcessing(false);
+       try {
+           const arrayBuffer = await file.arrayBuffer();
+           const srcDoc = await PDFDocument.load(arrayBuffer);
+           const newDoc = await PDFDocument.create();
+           // splitPages is 1-based index
+           const pagesToCopy = splitPages.map(p => p - 1);
+           const copiedPages = await newDoc.copyPages(srcDoc, pagesToCopy);
+           copiedPages.forEach((page) => newDoc.addPage(page));
+           
+           const pdfBytes = await newDoc.save();
+           const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+           const url = URL.createObjectURL(blob);
+           const link = document.createElement('a');
+           link.href = url;
+           link.download = 'split.pdf';
+           document.body.appendChild(link);
+           link.click();
+           document.body.removeChild(link);
+           URL.revokeObjectURL(url);
+       } catch (e) {
+           console.error(e);
+           notify("Split failed");
+       } finally {
+           setIsProcessing(false);
+       }
   };
   
   // --- EDITABLE CONVERTER LOGIC ---
@@ -239,7 +282,151 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
   };
 
   const handleCompress = async () => { notify("Feature available in Pro"); };
-  const handleImgToPdf = async () => { notify("Feature available in Pro"); };
+
+  // --- IMAGE TO PDF LOGIC (Mode: imageToPdf) ---
+  const handleImgToPdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+          const files = Array.from(e.target.files);
+          setImgFiles(prev => [...prev, ...files]);
+          // Create previews
+          const newPreviews = files.map(file => URL.createObjectURL(file));
+          setImgPreviews(prev => [...prev, ...newPreviews]);
+          notify(`${files.length} images added`);
+      }
+  };
+
+  const removeImage = (index: number) => {
+      setImgFiles(prev => prev.filter((_, i) => i !== index));
+      setImgPreviews(prev => {
+          URL.revokeObjectURL(prev[index]);
+          return prev.filter((_, i) => i !== index);
+      });
+  };
+
+  const fileToDataUri = (file: File) => new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        resolve(event.target?.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+  });
+
+  const handleConvertImgToPdf = async () => {
+      if (imgFiles.length === 0) return;
+      setIsProcessing(true);
+      notify("Generating PDF...");
+      try {
+          const doc = new jsPDF();
+          
+          for (let i = 0; i < imgFiles.length; i++) {
+              if (i > 0) doc.addPage();
+              
+              const imgData = await fileToDataUri(imgFiles[i]);
+              const imgProps = doc.getImageProperties(imgData);
+              
+              // Standard A4
+              const pdfWidth = doc.internal.pageSize.getWidth();
+              const pdfHeight = doc.internal.pageSize.getHeight();
+              
+              // Scale to fit page with some margin
+              const margin = 10;
+              const maxWidth = pdfWidth - (margin * 2);
+              const maxHeight = pdfHeight - (margin * 2);
+              
+              const imgRatio = imgProps.width / imgProps.height;
+              const pageRatio = maxWidth / maxHeight;
+              
+              let w, h;
+              
+              // If image is wider than page ratio (landscape-ish relative to page)
+              if (imgRatio >= pageRatio) {
+                  w = maxWidth;
+                  h = w / imgRatio;
+              } else {
+                  h = maxHeight;
+                  w = h * imgRatio;
+              }
+              
+              const x = (pdfWidth - w) / 2;
+              const y = (pdfHeight - h) / 2;
+              
+              doc.addImage(imgData, 'JPEG', x, y, w, h);
+          }
+          
+          doc.save('converted-images.pdf');
+          notify("PDF Downloaded!");
+      } catch (e) {
+          console.error(e);
+          notify("Error generating PDF");
+      } finally {
+          setIsProcessing(false);
+      }
+  };
+
+  // --- PDF TO IMAGE LOGIC (Mode: pdfToImage) ---
+  const handlePdfToImages = async () => {
+      if (!pdfDoc) return;
+      setIsProcessing(true);
+      notify("Rendering pages...");
+      const images: string[] = [];
+      
+      try {
+          for (let i = 1; i <= pdfDoc.numPages; i++) {
+              const page = await pdfDoc.getPage(i);
+              // Render at higher scale for better quality
+              const viewport = page.getViewport({ scale: 2.0 });
+              const canvas = document.createElement('canvas');
+              canvas.width = viewport.width;
+              canvas.height = viewport.height;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                  await page.render({ canvasContext: ctx, viewport }).promise;
+                  // Quality 0.9 JPEG
+                  images.push(canvas.toDataURL('image/jpeg', 0.9));
+              }
+          }
+          setPdfImages(images);
+          notify("All pages converted!");
+      } catch(e) {
+          console.error(e);
+          notify("Error converting PDF");
+      } finally {
+          setIsProcessing(false);
+      }
+  };
+
+  const handleDownloadZip = async () => {
+      if (pdfImages.length === 0) return;
+      notify("Creating ZIP...");
+      try {
+          const zip = new JSZip();
+          pdfImages.forEach((dataUrl, i) => {
+              // data:image/jpeg;base64,...
+              const data = dataUrl.split(',')[1];
+              zip.file(`page-${i+1}.jpg`, data, {base64: true});
+          });
+          const content = await zip.generateAsync({type:"blob"});
+          const url = URL.createObjectURL(content as any as Blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `pdf-images-${Date.now()}.zip`;
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          notify("ZIP Downloaded!");
+      } catch (e) {
+          console.error(e);
+          notify("ZIP Creation Failed");
+      }
+  };
+
+  const handleDownloadSingleImage = (dataUrl: string, index: number) => {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `page-${index + 1}.jpg`;
+      a.click();
+  };
 
   // --- RENDER ---
 
@@ -261,7 +448,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
         {/* --- PDF SUMMARIZER UI --- */}
         {toolId === 'pdf-summary' && file && (
             <div className="flex flex-col md:flex-row gap-6 h-[600px]">
-                {/* Left: Info & Action */}
+                {/* ... existing summary UI ... */}
                 <div className="w-full md:w-80 bg-gray-900 rounded-xl border border-gray-800 p-6 flex flex-col shadow-xl">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="p-3 bg-red-900/20 rounded-lg text-red-400">
@@ -295,7 +482,6 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
                     <button onClick={() => setFile(null)} className="mt-4 text-center text-xs text-gray-500 hover:text-white underline">Upload different file</button>
                 </div>
 
-                {/* Right: Output */}
                 <div className="flex-1 bg-gray-950 rounded-xl border border-gray-800 p-6 relative overflow-hidden flex flex-col">
                     <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-800">
                         <span className="text-xs text-gray-400 uppercase font-bold">AI Summary Result</span>
@@ -333,6 +519,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
         {/* --- EDITABLE CONVERTER UI --- */}
         {toolId === 'pdf-editable' && file && (
             <div className="flex flex-col items-center justify-center max-w-2xl mx-auto py-12">
+                {/* ... existing editable UI ... */}
                 <div className="bg-gray-900 p-8 rounded-xl border border-gray-800 shadow-2xl w-full text-center">
                     <div className="w-16 h-16 bg-cyan-900/20 rounded-full flex items-center justify-center mx-auto mb-6 text-cyan-400">
                         <FileText size={32}/>
@@ -359,7 +546,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
                             onClick={() => setEditableFormat('text')}
                             className={`p-4 rounded-xl border flex flex-col items-center gap-3 transition-all ${editableFormat === 'text' ? 'bg-gray-700/30 border-gray-500 text-gray-200' : 'bg-black/30 border-gray-700 text-gray-400 hover:bg-gray-800'}`}
                         >
-                            <File size={24}/>
+                            <FileIcon size={24}/>
                             <span className="font-bold text-sm">Text (.txt)</span>
                         </button>
                     </div>
@@ -378,10 +565,147 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
             </div>
         )}
 
-        {/* --- MERGE / SPLIT UI (Simplified) --- */}
+        {/* --- IMAGE TO PDF & PDF TO IMAGE UI --- */}
+        {toolId === 'pdf-image' && (
+            <div className="flex flex-col gap-6">
+                
+                {/* MODE TOGGLE */}
+                <div className="flex justify-center bg-gray-900 p-1 rounded-xl w-fit mx-auto border border-gray-800">
+                     <button onClick={() => { setConversionMode('imageToPdf'); setFile(null); setPdfImages([]); }} className={`px-6 py-2 rounded-lg font-medium transition-all ${conversionMode === 'imageToPdf' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}>Image to PDF</button>
+                     <button onClick={() => { setConversionMode('pdfToImage'); setFile(null); }} className={`px-6 py-2 rounded-lg font-medium transition-all ${conversionMode === 'pdfToImage' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}>PDF to Image</button>
+                </div>
+
+                {conversionMode === 'imageToPdf' && (
+                    <div className="flex flex-col md:flex-row gap-6 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="w-full md:w-80">
+                            <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-700 rounded-xl bg-gray-900/50 hover:bg-gray-800/50 transition-colors cursor-pointer">
+                                <Plus size={32} className="text-gray-500 mb-2" />
+                                <h3 className="text-sm font-medium text-white">Add Images</h3>
+                                <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP</p>
+                                <input type="file" accept="image/*" multiple className="hidden" onChange={handleImgToPdfUpload} />
+                            </label>
+                            
+                            <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-4">
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-sm font-bold text-gray-300">Images ({imgFiles.length})</span>
+                                    {imgFiles.length > 0 && <button onClick={() => {setImgFiles([]); setImgPreviews([]);}} className="text-xs text-red-400 hover:text-red-300">Clear All</button>}
+                                </div>
+                                <button 
+                                    onClick={handleConvertImgToPdf}
+                                    disabled={imgFiles.length === 0 || isProcessing}
+                                    className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold rounded-lg shadow-lg shadow-cyan-900/20 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {isProcessing ? <RefreshCw className="animate-spin" size={18}/> : <FileText size={18}/>}
+                                    {isProcessing ? 'Converting...' : 'Convert to PDF'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-4 min-h-[400px]">
+                            {imgPreviews.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-gray-700">
+                                    <Images size={48} className="mb-4 opacity-20"/>
+                                    <p>Upload images to create a PDF.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {imgPreviews.map((src, idx) => (
+                                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-800 bg-gray-900 aspect-[3/4]">
+                                            <img src={src} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt={`upload-${idx}`}/>
+                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => removeImage(idx)} className="p-1.5 bg-black/70 hover:bg-red-600 text-white rounded-full transition-colors">
+                                                    <X size={14}/>
+                                                </button>
+                                            </div>
+                                            <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-0.5 rounded text-[10px] text-white">
+                                                Page {idx + 1}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {conversionMode === 'pdfToImage' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4">
+                        {!file ? (
+                             <div className="h-64 border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center bg-gray-900/50 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                 <Upload size={32} className="text-gray-400 mb-2"/>
+                                 <span className="text-gray-300">Upload PDF to Convert</span>
+                                 <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={(e) => e.target.files && loadPdf(e.target.files[0])}/>
+                             </div>
+                        ) : (
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center bg-gray-900 p-4 rounded-xl border border-gray-800">
+                                    <div className="flex items-center gap-3">
+                                        <FileText className="text-cyan-500" size={24}/>
+                                        <div>
+                                            <div className="text-white font-medium">{file.name}</div>
+                                            <div className="text-xs text-gray-500">{pdfDoc?.numPages || '?'} Pages</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setFile(null)} className="text-sm text-gray-400 hover:text-white px-3 py-2 rounded hover:bg-gray-800 transition-colors">Change File</button>
+                                        {pdfImages.length === 0 && (
+                                            <button 
+                                                onClick={handlePdfToImages} 
+                                                disabled={isProcessing}
+                                                className="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+                                            >
+                                                {isProcessing ? <RefreshCw className="animate-spin" size={18}/> : <Images size={18}/>} 
+                                                Convert Pages
+                                            </button>
+                                        )}
+                                        {pdfImages.length > 0 && (
+                                            <button 
+                                                onClick={handleDownloadZip} 
+                                                className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg"
+                                            >
+                                                <Download size={18}/> Download All (ZIP)
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {pdfImages.length > 0 ? (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                        {pdfImages.map((src, idx) => (
+                                            <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-800 bg-gray-900 shadow-xl">
+                                                <img src={src} alt={`Page ${idx + 1}`} className="w-full h-auto"/>
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                    <button 
+                                                        onClick={() => handleDownloadSingleImage(src, idx)}
+                                                        className="p-2 bg-white text-black rounded-full hover:bg-cyan-400 hover:scale-110 transition-all"
+                                                        title="Download Image"
+                                                    >
+                                                        <Download size={20}/>
+                                                    </button>
+                                                </div>
+                                                <div className="absolute bottom-2 left-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded">
+                                                    Page {idx + 1}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-20 text-gray-500 bg-gray-900/30 rounded-xl border border-dashed border-gray-800">
+                                        <Images size={48} className="mx-auto mb-4 opacity-20"/>
+                                        <p>Click "Convert Pages" to extract images from PDF</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        )}
+
+        {/* --- MERGE / SPLIT UI --- */}
         {toolId === 'pdf-merge-split' && (
              <div className="flex flex-col gap-6">
-                 {/* ... existing merge/split UI ... */}
+                 {/* Mode Switcher */}
                  <div className="flex justify-center bg-gray-900 p-1 rounded-xl w-fit mx-auto border border-gray-800">
                      <button onClick={() => setMergeSplitMode('split')} className={`px-6 py-2 rounded-lg font-medium transition-all ${mergeSplitMode === 'split' ? 'bg-cyan-600 text-white' : 'text-gray-400'}`}>Split PDF</button>
                      <button onClick={() => setMergeSplitMode('merge')} className={`px-6 py-2 rounded-lg font-medium transition-all ${mergeSplitMode === 'merge' ? 'bg-cyan-600 text-white' : 'text-gray-400'}`}>Merge PDFs</button>
@@ -420,7 +744,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
 
                  {mergeSplitMode === 'merge' && (
                      <div className="space-y-4">
-                         {/* Merge UI Logic... reusing existing snippets for brevity in this output, but ensuring valid React code */}
+                         {/* Merge UI Logic */}
                          <div className="space-y-2">
                             {mergeFiles.map((f, i) => (
                                 <div key={i} className="flex items-center justify-between p-3 bg-gray-900 border border-gray-800 rounded-lg">
@@ -447,7 +771,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
         )}
 
         {/* --- DEFAULT PLACEHOLDER FOR OTHER TOOLS --- */}
-        {!['pdf-summary', 'pdf-merge-split', 'pdf-editable'].includes(toolId) && (
+        {!['pdf-summary', 'pdf-merge-split', 'pdf-editable', 'pdf-image'].includes(toolId) && (
             <div className="text-center py-20 text-gray-500">
                 <p>Select a tool mode to begin.</p>
                 {!file && (
