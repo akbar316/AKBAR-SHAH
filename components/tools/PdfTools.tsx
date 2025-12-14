@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Upload, Download, RefreshCw, Scissors, Images, Minimize2, Check, FileText, 
@@ -407,7 +406,7 @@ export const PdfTools: React.FC<PdfToolsProps> = ({ toolId, toolData, notify }) 
               zip.file(`page-${i+1}.jpg`, data, {base64: true});
           });
           const content = await zip.generateAsync({type:"blob"});
-          const url = URL.createObjectURL(content as unknown as Blob);
+          const url = URL.createObjectURL(content as any as Blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `pdf-images-${Date.now()}.zip`;
