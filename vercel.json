@@ -1,0 +1,13 @@
+
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "redirects": [
+    { 
+      "source": "/tools", 
+      "destination": "/", 
+      "permanent": true 
+    }
+  ]
+}
