@@ -8,7 +8,6 @@ import About from './About';
 import Contact from './Contact';
 import Privacy from './Privacy';
 import Terms from './Terms';
-import Tools from './Tools';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -22,7 +21,7 @@ root.render(
       <Routes>
         <Route path="/" element={<App />}>
           <Route index element={<Home />} />
-          <Route path="tools" element={<Tools />} />
+          <Route path="tools" element={<Home />} />
           <Route path="tools/:slug" element={<ToolPage />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
