@@ -1,13 +1,18 @@
 
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/tools/:slug", "destination": "/index.html" },
+    { "source": "/about", "destination": "/index.html" },
+    { "source": "/contact", "destination": "/index.html" },
+    { "source": "/terms", "destination": "/index.html" },
+    { "source": "/privacy", "destination": "/index.html" },
+    { "source": "/", "destination": "/index.html" }
   ],
   "redirects": [
-    { 
-      "source": "/tools", 
-      "destination": "/", 
-      "permanent": true 
+    {
+      "source": "/tools\\?tool=(.*)",
+      "destination": "/tools/$1",
+      "permanent": true
     }
   ]
 }

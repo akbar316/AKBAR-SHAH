@@ -1,18 +1,18 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ToolCategory } from '../types';
 
 interface ToolCardProps {
   tool: ToolCategory;
-  onSelectTool: (toolId: string) => void;
 }
 
-export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
+export const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
   const MainIcon = tool.mainIcon;
 
   return (
     <div 
       className={`
-        relative group cursor-pointer transition-all duration-500 ease-out
+        relative group transition-all duration-500 ease-out
         hover:-translate-y-2 hover:shadow-2xl
         w-full max-w-[300px] h-[480px] mx-auto
         perspective-1000
@@ -58,12 +58,9 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
             </div>
             
             {tool.subTools.map((sub) => (
-              <div 
+              <Link 
                 key={sub.id} 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectTool(sub.id);
-                }}
+                to={`/tools/${sub.id}`}
                 className="flex flex-col items-center justify-center group/item"
               >
                 <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-1 hover:bg-white/20 hover:border-cyan-500/50 hover:shadow-[0_0_10px_rgba(6,182,212,0.2)] transition-all cursor-pointer">
@@ -72,7 +69,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, onSelectTool }) => {
                 <span className="text-[10px] text-gray-500 text-center leading-tight px-1 break-words w-full group-hover/item:text-cyan-400/80 transition-colors">
                   {sub.name}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
