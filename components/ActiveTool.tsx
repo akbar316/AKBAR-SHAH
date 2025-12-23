@@ -1,8 +1,5 @@
 import React, { useState, Suspense } from 'react';
 import { SubTool, ToolCategory } from '../types';
-import { ToolLayout } from './ToolLayout';
-import { SeoContent } from './SeoContent';
-import { SEO_DATA } from '../constants';
 import { RefreshCw } from 'lucide-react';
 
 // Lazy Load Tools for Performance Optimization
@@ -19,22 +16,14 @@ interface ActiveToolProps {
   toolId: string;
   toolData: SubTool;
   category: ToolCategory;
-  onBack: () => void;
-  onSelectTool?: (toolId: string | null) => void;
 }
 
-export const ActiveTool: React.FC<ActiveToolProps> = ({ toolId, toolData, category, onBack, onSelectTool }) => {
+export const ActiveTool: React.FC<ActiveToolProps> = ({ toolId, toolData, category }) => {
   const [notification, setNotification] = useState<string | null>(null);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleToolSelect = (id: string | null) => {
-      if (onSelectTool) {
-          onSelectTool(id);
-      }
   };
 
   const renderToolContent = () => {
@@ -61,26 +50,19 @@ export const ActiveTool: React.FC<ActiveToolProps> = ({ toolId, toolData, catego
   };
 
   return (
-    <ToolLayout 
-        toolData={toolData} 
-        category={category} 
-        onBack={onBack} 
-        notification={notification}
-    >
-        <Suspense fallback={
-            <div className="flex h-64 items-center justify-center text-cyan-500">
-                <RefreshCw className="animate-spin" size={32}/>
-            </div>
-        }>
-            {renderToolContent()}
-        </Suspense>
-        
-        {/* SEO Content Section */}
-        <SeoContent 
-            data={SEO_DATA[toolId]} 
-            category={category}
-            onSelectTool={handleToolSelect}
-        />
-    </ToolLayout>
+    <div className="w-full max-w-4xl mx-auto px-4 py-10">
+      <Suspense fallback={
+        <div className="flex h-64 items-center justify-center text-cyan-500">
+          <RefreshCw className="animate-spin" size={32}/>
+        </div>
+      }>
+        {renderToolContent()}
+      </Suspense>
+      {notification && (
+        <div className="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg animate-in fade-in slide-in-from-bottom">
+          {notification}
+        </div>
+      )}
+    </div>
   );
 };

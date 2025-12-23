@@ -3,6 +3,8 @@ import React, { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { TOOLS_DATA, SEO_DATA } from './constants';
 import { ActiveTool } from './components/ActiveTool';
+import { SeoContent } from './components/SeoContent';
+import { ChevronLeft } from 'lucide-react';
 
 function ToolPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -74,13 +76,36 @@ function ToolPage() {
   }, [slug, seo]);
 
   return (
-    <ActiveTool
-      toolId={slug}
-      toolData={tool}
-      category={category}
-      onBack={() => window.history.back() } // Or link to home
-      onSelectTool={(id) => {}}
-    />
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mb-8">
+        <Link to="/" className="inline-flex items-center text-gray-400 hover:text-white transition-colors">
+          <ChevronLeft size={20} className="mr-2" />
+          Back to All Tools
+        </Link>
+      </div>
+
+      <div className="bg-white/5 rounded-2xl shadow-lg backdrop-blur-sm border border-white/10">
+        <div className="p-6 sm:p-8 border-b border-white/10">
+          <div className="flex items-center">
+            <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 mr-4">
+              <tool.icon size={24} className="text-cyan-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">{tool.name}</h1>
+              <p className="text-gray-400">{tool.description}</p>
+            </div>
+          </div>
+        </div>
+        
+        <ActiveTool
+          toolId={slug}
+          toolData={tool}
+          category={category}
+        />
+      </div>
+
+      <SeoContent data={seo} category={category} currentToolId={slug} />
+    </div>
   );
 }
 
