@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /?tool=*
 
 Sitemap: https://dicetools.online/sitemap.xml
