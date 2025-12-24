@@ -7,21 +7,57 @@ import { SeoContent } from './components/SeoContent';
 import { ChevronLeft } from 'lucide-react';
 
 function ToolPage() {
-  const { categoryId, toolId } = useParams<{ categoryId: string, toolId: string }>();
+  const { categoryId, toolId } = useParams<{ categoryId: string, toolId?: string }>();
 
-  // Redirect if params are missing
-  if (!categoryId || !toolId) {
-    return <Navigate to="/" replace />;
+  // Find category data
+  const category = TOOLS_DATA.find(c => c.id === categoryId);
+
+  // Handle category not found
+  if (!categoryId || !category) {
+    return <Navigate to="/404" replace />;
   }
 
-  // Find the tool data
+  // If it's a category page (no toolId)
+  if (!toolId) {
+    useEffect(() => {
+      document.title = `${category.name} Tools - Dicetools`;
+      const descriptionMeta = document.querySelector('meta[name="description"]');
+      const description = `Explore all ${category.name} tools available on Dicetools. ${category.description}`;
+      if (descriptionMeta) {
+        descriptionMeta.setAttribute('content', description);
+      } else {
+        const newMeta = document.createElement('meta');
+        newMeta.name = 'description';
+        newMeta.content = description;
+        document.head.appendChild(newMeta);
+      }
+    }, [category]);
+
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <h1 className="text-3xl font-bold text-white mb-2">{category.name} Tools</h1>
+          <p className="text-lg text-gray-400 mb-8">{category.description}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {category.subTools.map(tool => (
+                  <Link to={`/${category.id}/${tool.id}`} key={tool.id} className="bg-white/5 p-6 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 flex-shrink-0">
+                          <tool.icon size={20} className="text-cyan-400" />
+                      </div>
+                      <div>
+                        <h2 className="font-bold text-white">{tool.name}</h2>
+                        <p className="text-sm text-gray-400">{tool.description}</p>
+                      </div>
+                  </Link>
+              ))}
+          </div>
+      </div>
+    );
+  }
+
+  // If it's a specific tool page
   const getToolDetails = (catId: string, toolSlug: string) => {
-    const category = TOOLS_DATA.find(c => c.id === catId);
-    if (!category) return null;
-    
     const tool = category.subTools.find(t => t.id === toolSlug);
     if (!tool) return null;
-
     return { category, tool, seo: SEO_DATA[toolSlug] };
   };
 
@@ -32,9 +68,9 @@ function ToolPage() {
     return <Navigate to="/404" replace />;
   }
 
-  const { category, tool, seo } = toolDetails;
+  const { tool, seo } = toolDetails;
 
-  // SEO & Metadata
+  // SEO & Metadata for Tool Page
   useEffect(() => {
     if (seo) {
       document.title = seo.title;
@@ -48,7 +84,6 @@ function ToolPage() {
         document.head.appendChild(newMeta);
       }
       
-      // Canonical URL
       const canonicalLink = document.querySelector('link[rel="canonical"]');
       const canonicalUrl = `https://dicetools.online/${categoryId}/${toolId}`;
       if (canonicalLink) {
@@ -62,7 +97,6 @@ function ToolPage() {
     }
 
     return () => {
-      // Cleanup function to reset title and meta description
       document.title = 'Dicetools - All Your Digital Tools. One Powerful Platform';
       const descriptionMeta = document.querySelector('meta[name="description"]');
       if (descriptionMeta) {
@@ -78,9 +112,9 @@ function ToolPage() {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
-        <Link to="/" className="inline-flex items-center text-gray-400 hover:text-white transition-colors">
+        <Link to={`/${categoryId}`} className="inline-flex items-center text-gray-400 hover:text-white transition-colors">
           <ChevronLeft size={20} className="mr-2" />
-          Back to All Tools
+          Back to {category.name} Tools
         </Link>
       </div>
 
