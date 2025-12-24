@@ -7,25 +7,25 @@ import { SeoContent } from './components/SeoContent';
 import { ChevronLeft } from 'lucide-react';
 
 function ToolPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { categoryId, toolId } = useParams<{ categoryId: string, toolId: string }>();
 
-  // Redirect if slug is missing
-  if (!slug) {
+  // Redirect if params are missing
+  if (!categoryId || !toolId) {
     return <Navigate to="/" replace />;
   }
 
   // Find the tool data
-  const getToolDetails = (toolSlug: string) => {
-    for (const category of TOOLS_DATA) {
-      const tool = category.subTools.find(t => t.id === toolSlug);
-      if (tool) {
-        return { category, tool, seo: SEO_DATA[toolSlug] };
-      }
-    }
-    return null;
+  const getToolDetails = (catId: string, toolSlug: string) => {
+    const category = TOOLS_DATA.find(c => c.id === catId);
+    if (!category) return null;
+    
+    const tool = category.subTools.find(t => t.id === toolSlug);
+    if (!tool) return null;
+
+    return { category, tool, seo: SEO_DATA[toolSlug] };
   };
 
-  const toolDetails = getToolDetails(slug);
+  const toolDetails = getToolDetails(categoryId, toolId);
 
   // Handle tool not found
   if (!toolDetails) {
@@ -50,7 +50,7 @@ function ToolPage() {
       
       // Canonical URL
       const canonicalLink = document.querySelector('link[rel="canonical"]');
-      const canonicalUrl = `https://dicetools.online/tools/${slug}`;
+      const canonicalUrl = `https://dicetools.online/${categoryId}/${toolId}`;
       if (canonicalLink) {
         canonicalLink.setAttribute('href', canonicalUrl);
       } else {
@@ -73,7 +73,7 @@ function ToolPage() {
          canonicalLink.setAttribute('href', 'https://dicetools.online');
        }
     };
-  }, [slug, seo]);
+  }, [categoryId, toolId, seo]);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -92,19 +92,19 @@ function ToolPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">{tool.name}</h1>
-              <p className="text-gray-400">{tool.description}</p>
+              <p className="text-gray-400">{category.description}</p>
             </div>
           </div>
         </div>
         
         <ActiveTool
-          toolId={slug}
+          toolId={toolId}
           toolData={tool}
           category={category}
         />
       </div>
 
-      <SeoContent data={seo} category={category} currentToolId={slug} />
+      <SeoContent data={seo} category={category} currentToolId={toolId} />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { CircuitBackground } from './components/CircuitBackground';
 import { Box, Menu, X } from 'lucide-react';
+import Search from './components/Search';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,7 +21,7 @@ function App() {
           </a>
         </div>
         <div className="hidden md:flex flex-1 max-w-lg mx-auto relative">
-          {/* Search will be re-implemented later */}
+          <Search />
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400 flex-shrink-0">
           <a href="/" className="hover:text-white transition-colors">Home</a>
