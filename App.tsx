@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { CircuitBackground } from './components/CircuitBackground';
-import { Box, Menu } from 'lucide-react';
+import { Box, Menu, X } from 'lucide-react';
 
 function App() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-transparent text-white font-sans selection:bg-cyan-500/30 overflow-x-hidden relative flex flex-col">
       <CircuitBackground />
@@ -22,14 +24,24 @@ function App() {
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400 flex-shrink-0">
           <a href="/" className="hover:text-white transition-colors">Home</a>
-          <a href="/" className="hover:text-white transition-colors">Tools</a>
           <a href="/about" className="hover:text-white transition-colors">About</a>
           <a href="/contact" className="hover:text-white transition-colors">Contact</a>
         </div>
-        <button className="md:hidden text-white ml-auto">
-          <Menu size={24} />
+        <button className="md:hidden text-white ml-auto" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </nav>
+
+      {isMenuOpen && (
+        <div className="md:hidden bg-transparent z-40">
+          <div className="max-w-7xl mx-auto px-6 pb-6 flex flex-col items-center gap-4 text-lg font-medium text-gray-300">
+            <a href="/" className="hover:text-white transition-colors">Home</a>
+            <a href="/about" className="hover:text-white transition-colors">About</a>
+            <a href="/contact" className="hover:text-white transition-colors">Contact</a>
+          </div>
+        </div>
+      )}
+
       <Outlet />
       <footer className="relative z-10 bg-gradient-to-b from-[#0a0e17] to-black border-t border-white/5 pt-16 pb-8 mt-auto">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
