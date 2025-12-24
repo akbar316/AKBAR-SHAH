@@ -60,7 +60,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
             {tool.subTools.map((sub) => (
               <Link 
                 key={sub.id} 
-                to={`/tools/${sub.id}`}
+                to={`/${tool.id}/${sub.id}`}
                 className="flex flex-col items-center justify-center group/item"
               >
                 <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-1 hover:bg-white/20 hover:border-cyan-500/50 hover:shadow-[0_0_10px_rgba(6,182,212,0.2)] transition-all cursor-pointer">
