@@ -21,7 +21,6 @@ root.render(
       <Routes>
         <Route path="/" element={<App />}>
           <Route index element={<Home />} />
-          <Route path="tools" element={<Navigate to="/" replace />} />
           <Route path=":categoryId/:toolId" element={<ToolPage />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
