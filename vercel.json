@@ -1,18 +1,232 @@
 
 {
-  "rewrites": [
-    { "source": "/tools/:slug", "destination": "/index.html" },
-    { "source": "/about", "destination": "/index.html" },
-    { "source": "/contact", "destination": "/index.html" },
-    { "source": "/terms", "destination": "/index.html" },
-    { "source": "/privacy", "destination": "/index.html" },
-    { "source": "/", "destination": "/index.html" }
-  ],
   "redirects": [
     {
-      "source": "/tools\\?tool=(.*)",
-      "destination": "/tools/$1",
+      "source": "/tools",
+      "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/tools/pdf-summary",
+      "destination": "/pdf/pdf-summary",
+      "permanent": true
+    },
+    {
+      "source": "/tools/pdf-editable",
+      "destination": "/pdf/pdf-editable",
+      "permanent": true
+    },
+    {
+      "source": "/tools/pdf-image",
+      "destination": "/pdf/pdf-image",
+      "permanent": true
+    },
+    {
+      "source": "/tools/pdf-compress",
+      "destination": "/pdf/pdf-compress",
+      "permanent": true
+    },
+    {
+      "source": "/tools/pdf-merge-split",
+      "destination": "/pdf/pdf-merge-split",
+      "permanent": true
+    },
+    {
+      "source": "/tools/text-extractor",
+      "destination": "/text/text-extractor",
+      "permanent": true
+    },
+    {
+      "source": "/tools/text-counter",
+      "destination": "/text/text-counter",
+      "permanent": true
+    },
+    {
+      "source": "/tools/text-diff",
+      "destination": "/text/text-diff",
+      "permanent": true
+    },
+    {
+      "source": "/tools/text-speech",
+      "destination": "/text/text-speech",
+      "permanent": true
+    },
+    {
+      "source": "/tools/text-case",
+      "destination": "/text/text-case",
+      "permanent": true
+    },
+    {
+      "source": "/tools/dev-web-builder",
+      "destination": "/dev/dev-web-builder",
+      "permanent": true
+    },
+    {
+      "source": "/tools/dev-format",
+      "destination": "/dev/dev-format",
+      "permanent": true
+    },
+    {
+      "source": "/tools/dev-json",
+      "destination": "/dev/dev-json",
+      "permanent": true
+    },
+    {
+      "source": "/tools/dev-api",
+      "destination": "/dev/dev-api",
+      "permanent": true
+    },
+    {
+      "source": "/tools/dev-ask",
+      "destination": "/dev/dev-ask",
+      "permanent": true
+    },
+    {
+      "source": "/tools/img-resize",
+      "destination": "/image/img-resize",
+      "permanent": true
+    },
+    {
+      "source": "/tools/img-crop",
+      "destination": "/image/img-crop",
+      "permanent": true
+    },
+    {
+      "source": "/tools/img-watermark",
+      "destination": "/image/img-watermark",
+      "permanent": true
+    },
+    {
+      "source": "/tools/img-convert",
+      "destination": "/image/img-convert",
+      "permanent": true
+    },
+    {
+      "source": "/tools/img-filter",
+      "destination": "/image/img-filter",
+      "permanent": true
+    },
+    {
+      "source": "/tools/student-notes",
+      "destination": "/student/student-notes",
+      "permanent": true
+    },
+    {
+      "source": "/tools/student-solver",
+      "destination": "/student/student-solver",
+      "permanent": true
+    },
+    {
+      "source": "/tools/student-questions",
+      "destination": "/student/student-questions",
+      "permanent": true
+    },
+    {
+      "source": "/tools/student-paraphrase",
+      "destination": "/student/student-paraphrase",
+      "permanent": true
+    },
+    {
+      "source": "/tools/student-grammar",
+      "destination": "/student/student-grammar",
+      "permanent": true
+    },
+    {
+      "source": "/tools/util-calc",
+      "destination": "/utility/util-calc",
+      "permanent": true
+    },
+    {
+      "source": "/tools/util-unit",
+      "destination": "/utility/util-unit",
+      "permanent": true
+    },
+    {
+      "source": "/tools/util-password",
+      "destination": "/utility/util-password",
+      "permanent": true
+    },
+    {
+      "source": "/tools/util-qrcode",
+      "destination": "/utility/util-qrcode",
+      "permanent": true
+    },
+    {
+      "source": "/tools/util-obfuscator",
+      "destination": "/utility/util-obfuscator",
+      "permanent": true
+    },
+    {
+      "source": "/tools/ai-chat",
+      "destination": "/ai/ai-chat",
+      "permanent": true
+    },
+    {
+      "source": "/tools/ai-code",
+      "destination": "/ai/ai-code",
+      "permanent": true
+    },
+    {
+      "source": "/tools/ai-summarizer",
+      "destination": "/ai/ai-summarizer",
+      "permanent": true
+    },
+    {
+      "source": "/tools/ai-prompt",
+      "destination": "/ai/ai-prompt",
+      "permanent": true
+    },
+    {
+      "source": "/tools/ai-resume",
+      "destination": "/ai/ai-resume",
+      "permanent": true
+    },
+    {
+      "source": "/tools/seo-keyword",
+      "destination": "/seo/seo-keyword",
+      "permanent": true
+    },
+    {
+      "source": "/tools/seo-meta",
+      "destination": "/seo/seo-meta",
+      "permanent": true
+    },
+    {
+      "source": "/tools/seo-content",
+      "destination": "/seo/seo-content",
+      "permanent": true
+    },
+    {
+      "source": "/tools/seo-title",
+      "destination": "/seo/seo-title",
+      "permanent": true
+    },
+    {
+      "source": "/tools/seo-report",
+      "destination": "/seo/seo-report",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/:categoryId/:toolId",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/index.html"
     }
   ]
 }
