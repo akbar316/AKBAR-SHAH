@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowLeft, Check } from 'lucide-react';
 import { SubTool, ToolCategory } from '../types';
@@ -8,6 +9,7 @@ interface ToolLayoutProps {
   onBack: () => void;
   notification: string | null;
   children: React.ReactNode;
+  version?: string;
 }
 
 export const ToolLayout: React.FC<ToolLayoutProps> = ({ 
@@ -15,8 +17,14 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
   category, 
   onBack, 
   notification, 
-  children 
+  children,
+  version
 }) => {
+  const colorName = category.borderColor.split('-')[1] || 'cyan';
+  const iconColorClass = `text-${colorName}-400`;
+  const badgeBgClass = `bg-${colorName}-900/20`;
+  const notificationBorderClass = `border-${colorName}-500/30`;
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Tool Header */}
@@ -30,15 +38,17 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
             </button>
             <div>
                 <div className="flex items-center gap-2">
-                    <toolData.icon className="text-cyan-400" size={24} />
+                    <toolData.icon className={iconColorClass} size={24} />
                     <h2 className="text-2xl font-bold text-white">{toolData.name}</h2>
                 </div>
                 <p className="text-gray-500 text-sm mt-1">Part of {category.title}</p>
             </div>
         </div>
-        <div className={`px-4 py-1.5 rounded-full text-xs font-medium border ${category.borderColor} bg-${category.gradientFrom.split('-')[1]}-900/20 text-gray-300`}>
-            V2.1.0 (Pro)
-        </div>
+        {version && (
+            <div className={`px-4 py-1.5 rounded-full text-xs font-medium border ${category.borderColor} ${badgeBgClass} text-gray-300`}>
+                {version}
+            </div>
+        )}
       </div>
 
       {/* Tool Workspace */}
@@ -48,7 +58,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
       
       {/* Toast Notification */}
       {notification && (
-          <div className="fixed bottom-8 right-8 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-2xl border border-cyan-500/30 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 z-50">
+          <div className={`fixed bottom-8 right-8 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-2xl border ${notificationBorderClass} flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 z-50`}>
               <Check className="text-green-400" size={18} />
               {notification}
           </div>
