@@ -9,7 +9,7 @@ interface SeoProps {
 }
 
 export function Seo({ data, slug }: SeoProps) {
-  const canonicalUrl = `https://dicetools.com/tools/${slug}`;
+  const canonicalUrl = `https://dicetools.com/${slug}`;
 
   return (
     <Helmet>

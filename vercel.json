@@ -8,6 +8,76 @@
       "source": "/tools", 
       "destination": "/", 
       "permanent": true 
+    },
+    {
+      "source": "/img-crop",
+      "destination": "/seo-pages/img-crop.html",
+      "permanent": true
+    },
+    {
+      "source": "/img-resize",
+      "destination": "/seo-pages/img-resize.html",
+      "permanent": true
+    },
+    {
+      "source": "/pdf-compress",
+      "destination": "/seo-pages/pdf-compress.html",
+      "permanent": true
+    },
+    {
+      "source": "/pdf-editable",
+      "destination": "/seo-pages/pdf-editable.html",
+      "permanent": true
+    },
+    {
+      "source": "/pdf-image",
+      "destination": "/seo-pages/pdf-image.html",
+      "permanent": true
+    },
+    {
+      "source": "/pdf-merge-split",
+      "destination": "/seo-pages/pdf-merge-split.html",
+      "permanent": true
+    },
+    {
+      "source": "/pdf-summary",
+      "destination": "/seo-pages/pdf-summary.html",
+      "permanent": true
+    },
+    {
+      "source": "/student-grammar",
+      "destination": "/seo-pages/student-grammar.html",
+      "permanent": true
+    },
+    {
+      "source": "/student-notes",
+      "destination": "/seo-pages/student-notes.html",
+      "permanent": true
+    },
+    {
+      "source": "/student-paraphrase",
+      "destination": "/seo-pages/student-paraphrase.html",
+      "permanent": true
+    },
+    {
+      "source": "/student-solver",
+      "destination": "/seo-pages/student-solver.html",
+      "permanent": true
+    },
+    {
+      "source": "/text-case",
+      "destination": "/seo-pages/text-case.html",
+      "permanent": true
+    },
+    {
+      "source": "/text-counter",
+      "destination": "/seo-pages/text-counter.html",
+      "permanent": true
+    },
+    {
+      "source": "/text-speech",
+      "destination": "/seo-pages/text-speech.html",
+      "permanent": true
     }
   ]
 }
