@@ -8,6 +8,92 @@
     <priority>1.0</priority>
   </url>
 
+  <!-- SEO Pages -->
+  <url>
+    <loc>https://dicetools.online/seo-pages/pdf-summary.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/pdf-merge-split.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/pdf-compress.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/pdf-image.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/pdf-editable.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/img-resize.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/img-crop.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/text-counter.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/text-case.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/text-speech.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/student-notes.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/student-solver.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/student-grammar.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://dicetools.online/seo-pages/student-paraphrase.html</loc>
+    <lastmod>2024-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <!-- Legal & Info Pages -->
   <url>
     <loc>https://dicetools.online/?tool=about</loc>
