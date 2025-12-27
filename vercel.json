@@ -7,6 +7,11 @@
   ],
   "redirects": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/public/sitemap.xml",
+      "permanent": true
+    },
+    {
       "source": "/tools",
       "destination": "/",
       "permanent": true
