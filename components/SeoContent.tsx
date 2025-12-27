@@ -1,46 +1,36 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ToolCategory } from '../types';
-
-interface SeoData {
-    title: string;
-    description: string;
-    content: string;
-}
+import { Helmet } from 'react-helmet-async';
 
 interface SeoContentProps {
-  data: SeoData;
-  category: ToolCategory;
-  currentToolId: string;
+  title: string;
+  description: string;
+  canonicalUrl: string;
+  keywords?: string;
 }
 
-export const SeoContent: React.FC<SeoContentProps> = ({ data, category, currentToolId }) => {
-  if (!data) {
-    return null;
-  }
-
-  const relatedTools = category.subTools.filter(t => t.id !== currentToolId).slice(0, 5);
-
+const SeoContent: React.FC<SeoContentProps> = ({ title, description, canonicalUrl, keywords }) => {
   return (
-    <div className="mt-20 prose prose-invert prose-lg max-w-none">
-      <div dangerouslySetInnerHTML={{ __html: data.content }} />
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      {keywords && <meta name="keywords" content={keywords} />}
+      <link rel="canonical" href={canonicalUrl} />
 
-      {relatedTools.length > 0 && (
-        <div className="mt-12">
-          <h3 className="text-xl font-bold text-cyan-400 mb-4">Related Tools</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {relatedTools.map(tool => (
-              <Link to={`/tools/${tool.id}`} key={tool.id} className="no-underline text-white">
-                <div className="p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all h-full flex flex-col items-center text-center">
-                  <tool.icon size={24} className="mb-2 text-cyan-400" />
-                  <span className="text-sm">{tool.name}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Open Graph / Facebook */}
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={canonicalUrl} />
+      <meta property="og:type" content="website" />
+      {/* You might want to pass an og:image prop as well */}
+      {/* <meta property="og:image" content="https://dicetools.online/og-image.jpg" /> */}
+
+      {/* Twitter */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      {/* <meta name="twitter:image" content="https://dicetools.online/og-image.jpg" /> */}
+    </Helmet>
   );
 };
+
+export default SeoContent;

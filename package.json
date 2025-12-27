@@ -9,10 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-<<<<<<< HEAD
     "autoprefixer": "^10.4.23",
-=======
->>>>>>> 8a1029c55dc41207e98752cf481ab70467c117cf
     "diff": "5.1.0",
     "fabric": "5.3.0",
     "html2canvas": "1.4.1",
@@ -22,18 +19,12 @@
     "lucide-react": "^0.555.0",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "3.11.174",
-<<<<<<< HEAD
     "postcss": "^8.5.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-helmet-async": "^2.0.5",
     "react-router-dom": "^7.11.0",
     "tailwindcss": "^4.1.18"
-=======
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.11.0"
->>>>>>> 8a1029c55dc41207e98752cf481ab70467c117cf
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
